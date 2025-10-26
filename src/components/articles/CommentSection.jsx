@@ -20,6 +20,10 @@ export default function CommentSection({ articleId, article, user }) {
 
   const postCommentMutation = useMutation({
     mutationFn: async ({ content, parent_comment_id }) => {
+      if (!user) {
+        base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+        return;
+      }
       const isAuthorReply = user?.email === article.created_by;
       await base44.entities.Comment.create({
         article_id: articleId,
@@ -42,11 +46,19 @@ export default function CommentSection({ articleId, article, user }) {
   });
 
   const handlePostComment = () => {
+    if (!user) {
+      base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+      return;
+    }
     if (!newComment.trim()) return;
     postCommentMutation.mutate({ content: newComment, parent_comment_id: null });
   };
 
   const handlePostReply = (parentId) => {
+    if (!user) {
+      base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+      return;
+    }
     if (!replyText.trim()) return;
     postCommentMutation.mutate({ content: replyText, parent_comment_id: parentId });
   };
@@ -80,10 +92,13 @@ export default function CommentSection({ articleId, article, user }) {
           </Button>
         </div>
       ) : (
-        <div className="mb-8 p-4 bg-[var(--muted)] rounded-lg text-center">
-          <p className="text-[var(--muted-foreground)] mb-3">Sign in to join the conversation</p>
-          <Button onClick={() => base44.auth.redirectToLogin()}>
-            Sign In
+        <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-[var(--border)]">
+          <h3 className="font-semibold mb-2">Join the conversation</h3>
+          <p className="text-[var(--muted-foreground)] mb-4">
+            Sign in to share your thoughts and engage with other readers
+          </p>
+          <Button onClick={() => base44.auth.redirectToLogin(window.location.pathname + window.location.search)}>
+            Sign In to Comment
           </Button>
         </div>
       )}
@@ -118,20 +133,24 @@ export default function CommentSection({ articleId, article, user }) {
               <p className="text-[var(--foreground)] mb-3 whitespace-pre-wrap">{comment.content}</p>
 
               {/* Comment Actions */}
-              {user && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setReplyTo(replyTo === comment.id ? null : comment.id)}
-                  className="gap-1"
-                >
-                  <Reply className="w-3 h-3" />
-                  Reply
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (!user) {
+                    base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+                    return;
+                  }
+                  setReplyTo(replyTo === comment.id ? null : comment.id);
+                }}
+                className="gap-1"
+              >
+                <Reply className="w-3 h-3" />
+                Reply
+              </Button>
 
               {/* Reply Form */}
-              {replyTo === comment.id && (
+              {replyTo === comment.id && user && (
                 <div className="mt-3 pl-12">
                   <Textarea
                     placeholder="Write a reply..."
@@ -195,7 +214,7 @@ export default function CommentSection({ articleId, article, user }) {
 
         {comments.length === 0 && !isLoading && (
           <div className="text-center py-12 text-[var(--muted-foreground)]">
-            No comments yet. Be the first to share your thoughts!
+            No comments yet. {user ? "Be the first to share your thoughts!" : "Sign in to be the first to comment!"}
           </div>
         )}
       </div>
