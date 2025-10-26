@@ -18,6 +18,7 @@ export default function Article() {
   const urlParams = new URLSearchParams(window.location.search);
   const articleId = urlParams.get("id");
   const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -26,7 +27,10 @@ export default function Article() {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
       } catch (error) {
+        // User not logged in - this is fine for article viewing
         setUser(null);
+      } finally {
+        setAuthChecked(true);
       }
     };
     checkAuth();
@@ -51,14 +55,14 @@ export default function Article() {
   const { data: savedArticles } = useQuery({
     queryKey: ['savedArticles', user?.email],
     queryFn: () => base44.entities.SavedArticle.filter({ created_by: user.email }),
-    enabled: !!user,
+    enabled: !!user && authChecked,
     initialData: [],
   });
 
   const { data: userLike } = useQuery({
     queryKey: ['articleLike', articleId, user?.email],
     queryFn: () => base44.entities.ArticleLike.filter({ article_id: articleId, created_by: user.email }),
-    enabled: !!user && !!articleId,
+    enabled: !!user && !!articleId && authChecked,
     initialData: [],
   });
 
@@ -67,6 +71,10 @@ export default function Article() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      if (!user) {
+        base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+        return;
+      }
       if (isSaved) {
         const saved = savedArticles.find(s => s.article_id === articleId);
         await base44.entities.SavedArticle.delete(saved.id);
@@ -81,6 +89,10 @@ export default function Article() {
 
   const likeMutation = useMutation({
     mutationFn: async () => {
+      if (!user) {
+        base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+        return;
+      }
       if (isLiked) {
         await base44.entities.ArticleLike.delete(userLike[0].id);
         await base44.entities.Article.update(articleId, {
@@ -198,6 +210,7 @@ export default function Article() {
                   variant="outline"
                   size="sm"
                   onClick={() => likeMutation.mutate()}
+                  disabled={likeMutation.isPending}
                   className={`gap-2 ${isLiked ? 'text-red-500 border-red-500' : ''}`}
                 >
                   <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
@@ -207,6 +220,7 @@ export default function Article() {
                   variant="outline"
                   size="sm"
                   onClick={() => saveMutation.mutate()}
+                  disabled={saveMutation.isPending}
                   className={`gap-2 ${isSaved ? 'text-blue-500 border-blue-500' : ''}`}
                 >
                   <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
@@ -214,13 +228,26 @@ export default function Article() {
                 </Button>
               </>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => base44.auth.redirectToLogin()}
-              >
-                Sign in to like & save
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => base44.auth.redirectToLogin(window.location.pathname + window.location.search)}
+                  className="gap-2"
+                >
+                  <Heart className="w-4 h-4" />
+                  {article.likes_count || 0}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => base44.auth.redirectToLogin(window.location.pathname + window.location.search)}
+                  className="gap-2"
+                >
+                  <Bookmark className="w-4 h-4" />
+                  Save
+                </Button>
+              </>
             )}
           </div>
           <ShareMenu article={article} />
@@ -249,6 +276,26 @@ export default function Article() {
                 #{tag}
               </Link>
             ))}
+          </div>
+        )}
+
+        {/* Sign-in CTA for engagement */}
+        {!user && authChecked && (
+          <div className="my-12 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-[var(--border)]">
+            <h3 className="text-xl font-bold mb-2">Enjoying this article?</h3>
+            <p className="text-[var(--muted-foreground)] mb-4">
+              Sign in to save articles, leave comments, and engage with our community of readers and writers.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={() => base44.auth.redirectToLogin(window.location.pathname + window.location.search)}>
+                Sign In
+              </Button>
+              <Link to={createPageUrl("PublisherDashboard")}>
+                <Button variant="outline">
+                  Become a Publisher
+                </Button>
+              </Link>
+            </div>
           </div>
         )}
 
