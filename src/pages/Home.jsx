@@ -9,6 +9,7 @@ import TrendingPanel from "../components/home/TrendingPanel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TrendingUp, Clock, Star, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const { data: articles, isLoading } = useQuery({
@@ -41,9 +42,9 @@ export default function Home() {
               </div>
             </div>
             <Link to={createPageUrl("DailyDigest")}>
-              <button className="px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
+              <Button className="bg-white text-blue-600 hover:bg-blue-50">
                 Configure Your Digest
-              </button>
+              </Button>
             </Link>
           </div>
         </div>
