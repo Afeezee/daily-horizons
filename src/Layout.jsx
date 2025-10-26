@@ -349,7 +349,18 @@ export default function Layout({ children, currentPageName }) {
             </div>
 
             <div className="mt-8 pt-8 border-t border-[var(--border)] text-center text-sm text-[var(--muted-foreground)]">
-              <p>© {new Date().getFullYear()} Daily Horizons. All rights reserved.</p>
+              <p className="mb-2">© {new Date().getFullYear()} Daily Horizons. All rights reserved.</p>
+              <p>
+                Developed by{' '}
+                <a 
+                  href="https://cereustechnologies.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[var(--accent)] hover:underline font-medium"
+                >
+                  Cereus Technologies
+                </a>
+              </p>
             </div>
           </div>
         </footer>
