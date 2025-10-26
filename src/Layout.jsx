@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useState, useEffect } from "react";
@@ -330,7 +331,7 @@ export default function Layout({ children, currentPageName }) {
                   <Link to={createPageUrl("About")} className="block text-[var(--muted-foreground)] hover:text-[var(--foreground)]">About Us</Link>
                   <Link to={createPageUrl("PublisherDashboard")} className="block text-[var(--muted-foreground)] hover:text-[var(--foreground)]">Become a Publisher</Link>
                   <a href="#" className="block text-[var(--muted-foreground)] hover:text-[var(--foreground)]">Advertise</a>
-                  <a href="#" className="block text-[var(--muted-foreground)] hover:text-[var(--foreground)]">Contact</a>
+                  <a href={createPageUrl("About") + "#contact-section"} className="block text-[var(--muted-foreground)] hover:text-[var(--foreground)]">Contact</a>
                 </div>
               </div>
 
