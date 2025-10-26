@@ -8,10 +8,10 @@ import {
   PenSquare, FileText, Eye, Heart, MessageSquare, Plus, BarChart3, CheckCircle, Clock, XCircle
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import ArticleEditor from "../components/publisher/ArticleEditor";
-import PublisherStats from "../components/publisher/PublisherStats";
-import ArticlesList from "../components/publisher/ArticlesList";
-import TermsDialog from "../components/publisher/TermsDialog";
+import ArticleEditor from "../components/publisher/ArticleEditor.jsx";
+import PublisherStats from "../components/publisher/PublisherStats.jsx";
+import ArticlesList from "../components/publisher/ArticlesList.jsx";
+import TermsDialog from "../components/publisher/TermsDialog.jsx";
 
 export default function PublisherDashboard() {
   const [user, setUser] = useState(null);
