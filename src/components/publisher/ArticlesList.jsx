@@ -1,0 +1,118 @@
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Eye, Heart, MessageSquare, Edit, ExternalLink, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function ArticlesList({ articles, onEdit, isLoading, isPending = false }) {
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {Array(3).fill(0).map((_, i) => (
+          <div key={i} className="bg-[var(--card)] p-6 rounded-lg border border-[var(--border)]">
+            <Skeleton className="h-6 w-3/4 mb-2" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (articles.length === 0) {
+    return (
+      <div className="bg-[var(--card)] p-12 rounded-lg border border-[var(--border)] text-center">
+        <p className="text-[var(--muted-foreground)] mb-4">
+          {isPending ? "No articles pending moderation" : "No articles yet"}
+        </p>
+        {!isPending && (
+          <Button onClick={() => onEdit(null)}>
+            Create Your First Article
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {articles.map((article) => (
+        <div
+          key={article.id}
+          className="bg-[var(--card)] p-6 rounded-lg border border-[var(--border)] hover:shadow-md transition-shadow"
+        >
+          <div className="flex flex-col md:flex-row gap-4">
+            {article.lead_image_url && (
+              <div className="w-full md:w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                <img
+                  src={article.lead_image_url}
+                  alt={article.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-4 mb-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold mb-1 line-clamp-2">{article.title}</h3>
+                  <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
+                    <span className="px-2 py-0.5 bg-[var(--primary)] text-white rounded text-xs font-semibold">
+                      {article.category}
+                    </span>
+                    <span>•</span>
+                    <span>{format(new Date(article.created_date), "MMM d, yyyy")}</span>
+                  </div>
+                </div>
+              </div>
+
+              {isPending && article.moderation_notes && (
+                <div className="mb-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300">{article.moderation_notes}</p>
+                </div>
+              )}
+
+              {article.status === "published" && (
+                <div className="flex items-center gap-4 mb-3 text-sm text-[var(--muted-foreground)]">
+                  <div className="flex items-center gap-1">
+                    <Eye className="w-4 h-4" />
+                    <span>{article.views_count || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Heart className="w-4 h-4" />
+                    <span>{article.likes_count || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MessageSquare className="w-4 h-4" />
+                    <span>{article.comments_count || 0}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(article)}
+                  className="gap-1"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </Button>
+                {article.status === "published" && (
+                  <Link to={createPageUrl("Article") + `?id=${article.id}`}>
+                    <Button variant="outline" size="sm" className="gap-1">
+                      <ExternalLink className="w-4 h-4" />
+                      View
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
