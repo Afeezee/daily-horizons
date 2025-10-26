@@ -195,7 +195,7 @@ export default function Layout({ children, currentPageName }) {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1 border-t border-[var(--border)] py-1">
+            <nav className="hidden md:flex flex-wrap items-center gap-1 border-t border-[var(--border)] py-1">
               <Link to={createPageUrl("Home")}>
                 <Button variant="ghost" size="sm" className="font-medium">
                   <Home className="w-4 h-4 mr-1.5" />
