@@ -1,0 +1,24 @@
+{
+  "name": "ArticleLike",
+  "type": "object",
+  "properties": {
+    "article_id": {
+      "type": "string",
+      "description": "ID of the liked article"
+    },
+    "reaction_type": {
+      "type": "string",
+      "enum": [
+        "like",
+        "insightful",
+        "disagree",
+        "applaud"
+      ],
+      "default": "like",
+      "description": "Type of reaction"
+    }
+  },
+  "required": [
+    "article_id"
+  ]
+}

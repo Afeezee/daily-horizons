@@ -1,0 +1,36 @@
+{
+  "name": "Comment",
+  "type": "object",
+  "properties": {
+    "article_id": {
+      "type": "string",
+      "description": "ID of the article being commented on"
+    },
+    "parent_comment_id": {
+      "type": "string",
+      "description": "ID of parent comment for threading"
+    },
+    "content": {
+      "type": "string",
+      "description": "Comment text"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Commenter display name"
+    },
+    "likes_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of likes on this comment"
+    },
+    "is_author_reply": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a reply from the article author"
+    }
+  },
+  "required": [
+    "article_id",
+    "content"
+  ]
+}

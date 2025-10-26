@@ -1,0 +1,23 @@
+{
+  "name": "SavedArticle",
+  "type": "object",
+  "properties": {
+    "article_id": {
+      "type": "string",
+      "description": "ID of the saved article"
+    },
+    "folder": {
+      "type": "string",
+      "enum": [
+        "read_later",
+        "research",
+        "favourite"
+      ],
+      "default": "read_later",
+      "description": "Organization folder"
+    }
+  },
+  "required": [
+    "article_id"
+  ]
+}

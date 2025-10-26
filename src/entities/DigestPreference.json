@@ -1,0 +1,45 @@
+{
+  "name": "DigestPreference",
+  "type": "object",
+  "properties": {
+    "delivery_time": {
+      "type": "string",
+      "description": "Preferred delivery time (e.g., 08:00)"
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekdays",
+        "three_per_week",
+        "weekly"
+      ],
+      "default": "daily",
+      "description": "How often to receive digest"
+    },
+    "num_articles": {
+      "type": "number",
+      "enum": [
+        3,
+        5,
+        7,
+        10
+      ],
+      "default": 5,
+      "description": "Number of articles per digest"
+    },
+    "preferred_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Categories to include in digest"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether digest is active"
+    }
+  },
+  "required": []
+}

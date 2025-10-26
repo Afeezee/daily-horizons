@@ -1,0 +1,49 @@
+{
+  "name": "PublisherProfile",
+  "type": "object",
+  "properties": {
+    "bio": {
+      "type": "string",
+      "description": "Publisher biography"
+    },
+    "avatar_url": {
+      "type": "string",
+      "description": "Profile picture URL"
+    },
+    "twitter_handle": {
+      "type": "string",
+      "description": "Twitter/X handle"
+    },
+    "accepted_terms": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether publisher accepted T&Cs"
+    },
+    "terms_accepted_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When terms were accepted"
+    },
+    "is_approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether publisher is approved to publish"
+    },
+    "total_articles": {
+      "type": "number",
+      "default": 0,
+      "description": "Total articles published"
+    },
+    "total_views": {
+      "type": "number",
+      "default": 0,
+      "description": "Total article views"
+    },
+    "total_likes": {
+      "type": "number",
+      "default": 0,
+      "description": "Total article likes"
+    }
+  },
+  "required": []
+}
