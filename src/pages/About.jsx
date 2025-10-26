@@ -4,6 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Newspaper, Users, Globe, Sparkles, PenSquare, Mail } from "lucide-react";
 
 export default function About() {
+  const scrollToContact = (e) => {
+    e.preventDefault();
+    const contactSection = document.getElementById('contact-section');
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="bg-[var(--background)]">
       {/* Hero */}
@@ -143,14 +151,14 @@ export default function About() {
         </section>
 
         {/* Contact */}
-        <section className="text-center">
+        <section id="contact-section" className="text-center scroll-mt-8">
           <h2 className="text-3xl font-bold mb-4">Get in Touch</h2>
           <p className="text-lg text-[var(--muted-foreground)] mb-6">
             Have questions, feedback, or partnership inquiries?
           </p>
           <p className="text-[var(--muted-foreground)]">
-            Email us at <a href="mailto:contact@dailyhorizons.com" className="text-[var(--accent)] hover:underline font-semibold">
-              contact@dailyhorizons.com
+            Email us at <a href="mailto:info@cereustechnologies.com" className="text-[var(--accent)] hover:underline font-semibold">
+              info@cereustechnologies.com
             </a>
           </p>
         </section>
