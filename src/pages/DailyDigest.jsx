@@ -7,13 +7,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Sparkles, Clock, FileText, Mail, CheckCircle, Rss, AlertCircle } from "lucide-react";
-import DigestPreview from "../components/digest/DigestPreview";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sparkles, Clock, FileText, Mail, CheckCircle, Rss, Settings, Newspaper, Send, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { format } from "date-fns";
 
 const categories = ["News", "Opinion", "Culture", "Lifestyle", "Sport", "Education", "Technology"];
 
 export default function DailyDigest() {
   const [user, setUser] = useState(null);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [numArticlesToShow, setNumArticlesToShow] = useState(10);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -28,7 +35,7 @@ export default function DailyDigest() {
     checkAuth();
   }, []);
 
-  const { data: preferences, isLoading } = useQuery({
+  const { data: preferences, isLoading: prefsLoading } = useQuery({
     queryKey: ['digestPreferences', user?.email],
     queryFn: async () => {
       const prefs = await base44.entities.DigestPreference.filter({ created_by: user.email });
@@ -40,7 +47,7 @@ export default function DailyDigest() {
     enabled: !!user,
   });
 
-  const [formData, setFormData] = useState({
+  const [scheduleSettings, setScheduleSettings] = useState({
     delivery_time: preferences?.delivery_time || "08:00",
     frequency: preferences?.frequency || "daily",
     num_articles: preferences?.num_articles || 5,
@@ -50,22 +57,47 @@ export default function DailyDigest() {
 
   useEffect(() => {
     if (preferences) {
-      setFormData({
+      setScheduleSettings({
         delivery_time: preferences.delivery_time || "08:00",
         frequency: preferences.frequency || "daily",
         num_articles: preferences.num_articles || 5,
         preferred_categories: preferences.preferred_categories || [],
         is_active: preferences.is_active ?? true,
       });
+      setSelectedCategories(preferences.preferred_categories || []);
     }
   }, [preferences]);
+
+  const { data: digestArticles, isLoading: articlesLoading } = useQuery({
+    queryKey: ['digestArticles', selectedCategories, numArticlesToShow],
+    queryFn: async () => {
+      let allArticles = await base44.entities.Article.filter(
+        { status: "published" }, 
+        "-published_date", 
+        100
+      );
+
+      if (selectedCategories.length > 0) {
+        allArticles = allArticles.filter(a => selectedCategories.includes(a.category));
+      }
+
+      const sortedArticles = allArticles.sort((a, b) => {
+        const scoreA = (a.is_editor_pick ? 40 : 0) + (a.is_featured ? 30 : 0) + (a.views_count || 0) * 0.01;
+        const scoreB = (b.is_editor_pick ? 40 : 0) + (b.is_featured ? 30 : 0) + (b.views_count || 0) * 0.01;
+        return scoreB - scoreA;
+      });
+
+      return sortedArticles.slice(0, numArticlesToShow);
+    },
+    enabled: !!user,
+  });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (preferences) {
-        await base44.entities.DigestPreference.update(preferences.id, formData);
+        await base44.entities.DigestPreference.update(preferences.id, scheduleSettings);
       } else {
-        await base44.entities.DigestPreference.create(formData);
+        await base44.entities.DigestPreference.create(scheduleSettings);
       }
     },
     onSuccess: () => {
@@ -74,12 +106,88 @@ export default function DailyDigest() {
   });
 
   const handleCategoryToggle = (category) => {
-    setFormData(prev => ({
+    setSelectedCategories(prev =>
+      prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
+    );
+  };
+
+  const handleScheduleCategoryToggle = (category) => {
+    setScheduleSettings(prev => ({
       ...prev,
       preferred_categories: prev.preferred_categories.includes(category)
         ? prev.preferred_categories.filter(c => c !== category)
         : [...prev.preferred_categories, category]
     }));
+  };
+
+  const handleSendDigestEmail = async () => {
+    if (!user?.email || !digestArticles || digestArticles.length === 0) return;
+
+    setIsSendingEmail(true);
+    setEmailSent(false);
+
+    try {
+      const emailBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Georgia, serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+            .header h1 { margin: 0; font-size: 28px; }
+            .header p { margin: 10px 0 0 0; opacity: 0.9; }
+            .article { border-bottom: 1px solid #eee; padding: 25px 20px; }
+            .article:last-child { border-bottom: none; }
+            .article-number { display: inline-block; width: 32px; height: 32px; background: #c41e3a; color: white; border-radius: 50%; text-align: center; line-height: 32px; font-weight: bold; margin-right: 10px; }
+            .article-title { font-size: 20px; font-weight: bold; color: #1a1a1a; margin: 10px 0; }
+            .article-category { display: inline-block; background: #c41e3a; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }
+            .article-summary { color: #555; margin: 10px 0; }
+            .article-meta { font-size: 14px; color: #888; margin-top: 8px; }
+            .read-more { display: inline-block; background: #c41e3a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 10px; }
+            .footer { background: #f5f5f5; padding: 20px; text-align: center; font-size: 14px; color: #888; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>📰 Your Daily Horizons Digest</h1>
+            <p>${format(new Date(), "EEEE, MMMM d, yyyy")}</p>
+          </div>
+          
+          ${digestArticles.map((article, index) => `
+            <div class="article">
+              <span class="article-number">${index + 1}</span>
+              <div class="article-category">${article.category}</div>
+              <div class="article-title">${article.title}</div>
+              <div class="article-summary">${article.summary || article.subtitle || ''}</div>
+              <div class="article-meta">
+                By ${article.author_name || article.created_by} • ${format(new Date(article.published_date), "MMM d, yyyy")} • ${article.reading_time} min read
+              </div>
+              <a href="${window.location.origin}${createPageUrl("Article")}?id=${article.id}" class="read-more">Read Full Article →</a>
+            </div>
+          `).join('')}
+          
+          <div class="footer">
+            <p><strong>Daily Horizons</strong> - Democratising News</p>
+            <p>Your personalized digest</p>
+            <p><a href="${window.location.origin}${createPageUrl("DailyDigest")}" style="color: #c41e3a;">Read more digests</a></p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      await base44.integrations.Core.SendEmail({
+        to: user.email,
+        subject: `📰 Your Daily Horizons Digest - ${format(new Date(), "MMMM d, yyyy")}`,
+        body: emailBody
+      });
+
+      setEmailSent(true);
+      setTimeout(() => setEmailSent(false), 5000);
+    } catch (error) {
+      console.error("Error sending digest:", error);
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   if (!user) {
@@ -91,7 +199,7 @@ export default function DailyDigest() {
               <Rss className="w-6 h-6 text-[var(--primary)]" />
               Daily Digest
             </CardTitle>
-            <CardDescription>Sign in to configure your personalized news digest</CardDescription>
+            <CardDescription>Sign in to read your personalized news digest</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => base44.auth.redirectToLogin()} className="w-full">
@@ -107,209 +215,388 @@ export default function DailyDigest() {
     <div className="min-h-screen bg-[var(--background)]">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-8 h-8" />
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <Newspaper className="w-10 h-10" />
+                <h1 className="text-4xl font-bold">Daily Digest</h1>
+              </div>
+              <p className="text-xl text-blue-100">
+                Your personalized news briefing
+              </p>
+            </div>
+            <div className="hidden md:block text-right">
+              <p className="text-sm opacity-75">{format(new Date(), "EEEE")}</p>
+              <p className="text-2xl font-bold">{format(new Date(), "MMMM d, yyyy")}</p>
+            </div>
           </div>
-          <h1 className="text-4xl font-bold mb-4">Your Daily Digest</h1>
-          <p className="text-xl text-blue-100">
-            Personalized news briefs delivered on your schedule
-          </p>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Settings Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                Digest Settings
-              </CardTitle>
-              <CardDescription>Customize how and when you receive your digest</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Active Toggle */}
-              <div className="flex items-center justify-between p-4 bg-[var(--muted)] rounded-lg">
-                <div>
-                  <Label htmlFor="active" className="font-semibold">Digest Active</Label>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    {formData.is_active ? "You'll receive digests" : "Paused"}
-                  </p>
-                </div>
-                <Switch
-                  id="active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-                />
-              </div>
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <Tabs defaultValue="digest" className="w-full">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+            <TabsTrigger value="digest" className="gap-2">
+              <Newspaper className="w-4 h-4" />
+              Read Digest
+            </TabsTrigger>
+            <TabsTrigger value="schedule" className="gap-2">
+              <Settings className="w-4 h-4" />
+              Schedule Settings
+            </TabsTrigger>
+          </TabsList>
 
-              {/* Delivery Time */}
-              <div>
-                <Label htmlFor="time">Delivery Time</Label>
-                <Input
-                  id="time"
-                  type="time"
-                  value={formData.delivery_time}
-                  onChange={(e) => setFormData(prev => ({ ...prev, delivery_time: e.target.value }))}
-                />
-              </div>
+          {/* DIGEST READER TAB */}
+          <TabsContent value="digest">
+            <div className="space-y-6">
+              {/* Filter Bar */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                    <div className="flex-1">
+                      <Label className="mb-2 block font-semibold">Filter by Categories</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {categories.map(category => (
+                          <button
+                            key={category}
+                            type="button"
+                            onClick={() => handleCategoryToggle(category)}
+                            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                              selectedCategories.includes(category)
+                                ? 'bg-[var(--primary)] text-white'
+                                : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--muted-foreground)] hover:text-white'
+                            }`}
+                          >
+                            {category}
+                          </button>
+                        ))}
+                      </div>
+                      {selectedCategories.length === 0 && (
+                        <p className="text-xs text-[var(--muted-foreground)] mt-2">
+                          Showing all categories
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Select
+                        value={numArticlesToShow.toString()}
+                        onValueChange={(value) => setNumArticlesToShow(parseInt(value))}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5 articles</SelectItem>
+                          <SelectItem value="10">10 articles</SelectItem>
+                          <SelectItem value="15">15 articles</SelectItem>
+                          <SelectItem value="20">20 articles</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        onClick={handleSendDigestEmail}
+                        disabled={isSendingEmail || !digestArticles || digestArticles.length === 0}
+                        className="gap-2"
+                      >
+                        {isSendingEmail ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : emailSent ? (
+                          <>
+                            <CheckCircle className="w-4 h-4" />
+                            Sent!
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4" />
+                            Email Copy
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              {/* Frequency */}
-              <div>
-                <Label htmlFor="frequency">Frequency</Label>
-                <Select
-                  value={formData.frequency}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, frequency: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekdays">Weekdays Only</SelectItem>
-                    <SelectItem value="three_per_week">3× per Week</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Number of Articles */}
-              <div>
-                <Label htmlFor="num">Number of Articles</Label>
-                <Select
-                  value={formData.num_articles.toString()}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, num_articles: parseInt(value) }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">3 articles</SelectItem>
-                    <SelectItem value="5">5 articles</SelectItem>
-                    <SelectItem value="7">7 articles</SelectItem>
-                    <SelectItem value="10">10 articles</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Categories */}
-              <div>
-                <Label className="mb-3 block">Preferred Categories</Label>
-                <div className="flex flex-wrap gap-2">
-                  {categories.map(category => (
-                    <button
-                      key={category}
-                      type="button"
-                      onClick={() => handleCategoryToggle(category)}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                        formData.preferred_categories.includes(category)
-                          ? 'bg-[var(--primary)] text-white'
-                          : 'bg-[var(--muted)] text-[var(--muted-foreground)]'
-                      }`}
-                    >
-                      {category}
-                    </button>
+              {/* Digest Articles */}
+              {articlesLoading ? (
+                <div className="space-y-4">
+                  {Array(5).fill(0).map((_, i) => (
+                    <Card key={i}>
+                      <CardContent className="pt-6">
+                        <div className="animate-pulse space-y-3">
+                          <div className="h-6 bg-[var(--muted)] rounded w-3/4"></div>
+                          <div className="h-4 bg-[var(--muted)] rounded w-full"></div>
+                          <div className="h-4 bg-[var(--muted)] rounded w-5/6"></div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
-                <p className="text-xs text-[var(--muted-foreground)] mt-2">
-                  Leave empty for all categories
-                </p>
+              ) : digestArticles && digestArticles.length > 0 ? (
+                <div className="space-y-4">
+                  {digestArticles.map((article, index) => (
+                    <Card key={article.id} className="hover:shadow-lg transition-shadow">
+                      <CardContent className="pt-6">
+                        <div className="flex gap-4">
+                          <div className="flex-shrink-0">
+                            <div className="w-12 h-12 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-lg">
+                              {index + 1}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="px-2 py-1 bg-[var(--primary)] text-white rounded text-xs font-semibold uppercase">
+                                {article.category}
+                              </span>
+                              {article.is_editor_pick && (
+                                <span className="px-2 py-1 bg-yellow-400 text-yellow-900 rounded text-xs font-semibold">
+                                  Editor's Pick
+                                </span>
+                              )}
+                              {article.is_featured && (
+                                <span className="px-2 py-1 bg-blue-500 text-white rounded text-xs font-semibold">
+                                  Featured
+                                </span>
+                              )}
+                            </div>
+                            
+                            <Link to={createPageUrl("Article") + `?id=${article.id}`}>
+                              <h3 className="text-xl font-bold mb-2 hover:text-[var(--accent)] transition-colors">
+                                {article.title}
+                              </h3>
+                            </Link>
+
+                            {article.subtitle && (
+                              <p className="text-base text-[var(--muted-foreground)] mb-3 font-medium">
+                                {article.subtitle}
+                              </p>
+                            )}
+
+                            <p className="text-sm text-[var(--muted-foreground)] mb-4 leading-relaxed">
+                              {article.summary || article.body.replace(/<[^>]*>/g, '').substring(0, 250) + '...'}
+                            </p>
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3 text-xs text-[var(--muted-foreground)]">
+                                <span>By {article.author_name || article.created_by}</span>
+                                <span>•</span>
+                                <span>{format(new Date(article.published_date), "MMM d, yyyy")}</span>
+                                <span>•</span>
+                                <span>{article.reading_time} min read</span>
+                              </div>
+                              <Link to={createPageUrl("Article") + `?id=${article.id}`}>
+                                <Button variant="outline" size="sm">
+                                  Read Full Article
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="pt-12 pb-12 text-center">
+                    <Newspaper className="w-16 h-16 text-[var(--muted-foreground)] mx-auto mb-4 opacity-50" />
+                    <h3 className="text-xl font-semibold mb-2">No articles found</h3>
+                    <p className="text-[var(--muted-foreground)]">
+                      Try adjusting your category filters or check back later
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* SCHEDULE SETTINGS TAB */}
+          <TabsContent value="schedule">
+            <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    Delivery Schedule
+                  </CardTitle>
+                  <CardDescription>Set up automated digest delivery</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between p-4 bg-[var(--muted)] rounded-lg">
+                    <div>
+                      <Label htmlFor="active" className="font-semibold">Scheduled Delivery</Label>
+                      <p className="text-sm text-[var(--muted-foreground)]">
+                        {scheduleSettings.is_active ? "Active" : "Paused"}
+                      </p>
+                    </div>
+                    <Switch
+                      id="active"
+                      checked={scheduleSettings.is_active}
+                      onCheckedChange={(checked) => setScheduleSettings(prev => ({ ...prev, is_active: checked }))}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="time">Delivery Time</Label>
+                    <Input
+                      id="time"
+                      type="time"
+                      value={scheduleSettings.delivery_time}
+                      onChange={(e) => setScheduleSettings(prev => ({ ...prev, delivery_time: e.target.value }))}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="frequency">Frequency</Label>
+                    <Select
+                      value={scheduleSettings.frequency}
+                      onValueChange={(value) => setScheduleSettings(prev => ({ ...prev, frequency: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekdays">Weekdays Only</SelectItem>
+                        <SelectItem value="three_per_week">3× per Week</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="num">Articles per Digest</Label>
+                    <Select
+                      value={scheduleSettings.num_articles.toString()}
+                      onValueChange={(value) => setScheduleSettings(prev => ({ ...prev, num_articles: parseInt(value) }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">3 articles</SelectItem>
+                        <SelectItem value="5">5 articles</SelectItem>
+                        <SelectItem value="7">7 articles</SelectItem>
+                        <SelectItem value="10">10 articles</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="mb-3 block">Categories for Scheduled Digest</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map(category => (
+                        <button
+                          key={category}
+                          type="button"
+                          onClick={() => handleScheduleCategoryToggle(category)}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                            scheduleSettings.preferred_categories.includes(category)
+                              ? 'bg-[var(--primary)] text-white'
+                              : 'bg-[var(--muted)] text-[var(--muted-foreground)]'
+                          }`}
+                        >
+                          {category}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-[var(--muted-foreground)] mt-2">
+                      Leave empty for all categories
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={() => saveMutation.mutate()}
+                    disabled={saveMutation.isPending}
+                    className="w-full gap-2"
+                  >
+                    {saveMutation.isPending ? (
+                      "Saving..."
+                    ) : saveMutation.isSuccess ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        Saved!
+                      </>
+                    ) : (
+                      "Save Schedule"
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Mail className="w-5 h-5" />
+                      Delivery Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-[var(--muted-foreground)] mb-4">
+                      Scheduled digests will be delivered to <strong>{user.email}</strong> at{" "}
+                      <strong>{scheduleSettings.delivery_time}</strong>{" "}
+                      {scheduleSettings.frequency === "daily" ? "every day" : scheduleSettings.frequency.replace("_", " ")}.
+                    </p>
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <p className="text-sm text-amber-800 dark:text-amber-300">
+                        <strong>Note:</strong> Automated scheduling requires server-side configuration. 
+                        Use the "Email Copy" button in the digest reader to send immediate copies.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      How It Works
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                        <span className="font-bold text-blue-600">1</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-1">Curated Selection</h4>
+                        <p className="text-sm text-[var(--muted-foreground)]">
+                          Articles selected based on preferences, editorial picks, and engagement
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                        <span className="font-bold text-purple-600">2</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-1">Email Delivery</h4>
+                        <p className="text-sm text-[var(--muted-foreground)]">
+                          Formatted digest delivered at your preferred time
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                        <span className="font-bold text-green-600">3</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-1">Read Anytime</h4>
+                        <p className="text-sm text-[var(--muted-foreground)]">
+                          Click through to read full articles when convenient
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-
-              <Button
-                onClick={() => saveMutation.mutate()}
-                disabled={saveMutation.isPending}
-                className="w-full gap-2"
-              >
-                {saveMutation.isPending ? (
-                  "Saving..."
-                ) : saveMutation.isSuccess ? (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    Saved!
-                  </>
-                ) : (
-                  "Save Preferences"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Info Card */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  How It Works
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <span className="font-bold text-blue-600">1</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">Curated Selection</h4>
-                    <p className="text-sm text-[var(--muted-foreground)]">
-                      Articles are selected based on your preferences, editorial picks, and trending stories
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
-                    <span className="font-bold text-purple-600">2</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">Email Delivery</h4>
-                    <p className="text-sm text-[var(--muted-foreground)]">
-                      Digest delivered to your inbox at your preferred time with beautifully formatted articles
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                    <span className="font-bold text-green-600">3</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">Read When Ready</h4>
-                    <p className="text-sm text-[var(--muted-foreground)]">
-                      Click through from your email to read full articles when you have time
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="w-5 h-5" />
-                  Delivery Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-[var(--muted-foreground)] mb-4">
-                  Your digest will be delivered to <strong>{user.email}</strong> at{" "}
-                  <strong>{formData.delivery_time}</strong> {formData.frequency === "daily" ? "every day" : formData.frequency.replace("_", " ")}.
-                </p>
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-800 dark:text-blue-300 flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <span>Note: Automated email scheduling requires server-side setup. Use the "Send Test Email" button in the preview below to test email delivery manually.</span>
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Live Preview Section */}
-        <div className="mt-12">
-          <DigestPreview preferences={formData} userEmail={user?.email} />
-        </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
