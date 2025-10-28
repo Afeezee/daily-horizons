@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,19 +9,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Clock, FileText, Mail, CheckCircle, Rss, Settings, Newspaper, Send, Loader2 } from "lucide-react";
+import { Sparkles, Clock, FileText, Mail, CheckCircle, Rss, Settings, Newspaper, Send, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format } from "date-fns";
 
 const categories = ["News", "Opinion", "Culture", "Lifestyle", "Sport", "Education", "Technology"];
 
+const subcategories = {
+  News: ["Breaking", "Politics", "World", "Business"],
+  Opinion: ["Editorials", "Columns", "Letters"],
+  Culture: ["Arts", "Books", "Film", "Music"],
+  Lifestyle: ["Food", "Travel", "Health", "Fashion"],
+  Sport: ["Football", "Athletics", "Analysis"],
+  Education: ["Higher Ed", "K-12", "Research"],
+  Technology: ["AI", "Startups", "Gadgets", "Science"],
+};
+
 export default function DailyDigest() {
   const [user, setUser] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedSubcategories, setSelectedSubcategories] = useState([]);
   const [numArticlesToShow, setNumArticlesToShow] = useState(10);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [showSubcategories, setShowSubcategories] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -69,25 +82,62 @@ export default function DailyDigest() {
   }, [preferences]);
 
   const { data: digestArticles, isLoading: articlesLoading } = useQuery({
-    queryKey: ['digestArticles', selectedCategories, numArticlesToShow],
+    queryKey: ['digestArticles', selectedCategories, selectedSubcategories, numArticlesToShow],
     queryFn: async () => {
       let allArticles = await base44.entities.Article.filter(
-        { status: "published" }, 
-        "-published_date", 
-        100
+        { status: "published" },
+        "-published_date",
+        200
       );
 
+      // Filter by categories if selected
       if (selectedCategories.length > 0) {
         allArticles = allArticles.filter(a => selectedCategories.includes(a.category));
       }
 
-      const sortedArticles = allArticles.sort((a, b) => {
-        const scoreA = (a.is_editor_pick ? 40 : 0) + (a.is_featured ? 30 : 0) + (a.views_count || 0) * 0.01;
-        const scoreB = (b.is_editor_pick ? 40 : 0) + (b.is_featured ? 30 : 0) + (b.views_count || 0) * 0.01;
-        return scoreB - scoreA;
+      // Filter by subcategories if selected
+      if (selectedSubcategories.length > 0) {
+        allArticles = allArticles.filter(a =>
+          a.labels && a.labels.some(label => selectedSubcategories.includes(label))
+        );
+      }
+
+      // Create a balanced mix of articles from different categories
+      // Group articles by category
+      const articlesByCategory = {};
+      allArticles.forEach(article => {
+        if (!articlesByCategory[article.category]) {
+          articlesByCategory[article.category] = [];
+        }
+        articlesByCategory[article.category].push(article);
       });
 
-      return sortedArticles.slice(0, numArticlesToShow);
+      // Sort articles within each category by priority
+      Object.keys(articlesByCategory).forEach(category => {
+        articlesByCategory[category].sort((a, b) => {
+          const scoreA = (a.is_editor_pick ? 40 : 0) + (a.is_featured ? 30 : 0) + (a.views_count || 0) * 0.01;
+          const scoreB = (b.is_editor_pick ? 40 : 0) + (b.is_featured ? 30 : 0) + (b.views_count || 0) * 0.01;
+          return scoreB - scoreA;
+        });
+      });
+
+      // Interleave articles from different categories for a balanced mix
+      const balancedArticles = [];
+      const categoryKeys = Object.keys(articlesByCategory);
+      let maxLength = 0;
+      if (categoryKeys.length > 0) {
+        maxLength = Math.max(...categoryKeys.map(cat => articlesByCategory[cat].length));
+      }
+
+      for (let i = 0; i < maxLength; i++) {
+        categoryKeys.forEach(category => {
+          if (articlesByCategory[category][i]) {
+            balancedArticles.push(articlesByCategory[category][i]);
+          }
+        });
+      }
+
+      return balancedArticles.slice(0, numArticlesToShow);
     },
     enabled: !!user,
   });
@@ -108,6 +158,12 @@ export default function DailyDigest() {
   const handleCategoryToggle = (category) => {
     setSelectedCategories(prev =>
       prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
+    );
+  };
+
+  const handleSubcategoryToggle = (subcategory) => {
+    setSelectedSubcategories(prev =>
+      prev.includes(subcategory) ? prev.filter(s => s !== subcategory) : [...prev, subcategory]
     );
   };
 
@@ -190,6 +246,11 @@ export default function DailyDigest() {
     }
   };
 
+  // Get available subcategories based on selected categories
+  const availableSubcategories = selectedCategories.length > 0
+    ? selectedCategories.flatMap(cat => subcategories[cat] || [])
+    : Object.values(subcategories).flat();
+
   if (!user) {
     return (
       <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
@@ -253,8 +314,9 @@ export default function DailyDigest() {
               {/* Filter Bar */}
               <Card>
                 <CardContent className="pt-6">
-                  <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                    <div className="flex-1">
+                  <div className="space-y-4">
+                    {/* Main Categories */}
+                    <div>
                       <Label className="mb-2 block font-semibold">Filter by Categories</Label>
                       <div className="flex flex-wrap gap-2">
                         {categories.map(category => (
@@ -278,43 +340,100 @@ export default function DailyDigest() {
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Select
-                        value={numArticlesToShow.toString()}
-                        onValueChange={(value) => setNumArticlesToShow(parseInt(value))}
+
+                    {/* Subcategories Toggle */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setShowSubcategories(!showSubcategories)}
+                        className="flex items-center gap-2 text-sm font-medium text-[var(--accent)] hover:underline"
                       >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="5">5 articles</SelectItem>
-                          <SelectItem value="10">10 articles</SelectItem>
-                          <SelectItem value="15">15 articles</SelectItem>
-                          <SelectItem value="20">20 articles</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        onClick={handleSendDigestEmail}
-                        disabled={isSendingEmail || !digestArticles || digestArticles.length === 0}
-                        className="gap-2"
-                      >
-                        {isSendingEmail ? (
+                        {showSubcategories ? (
                           <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Sending...
-                          </>
-                        ) : emailSent ? (
-                          <>
-                            <CheckCircle className="w-4 h-4" />
-                            Sent!
+                            <ChevronUp className="w-4 h-4" />
+                            Hide Sub-Categories
                           </>
                         ) : (
                           <>
-                            <Send className="w-4 h-4" />
-                            Email Copy
+                            <ChevronDown className="w-4 h-4" />
+                            Show Sub-Categories
                           </>
                         )}
-                      </Button>
+                      </button>
+                    </div>
+
+                    {/* Subcategories */}
+                    {showSubcategories && (
+                      <div className="pt-2 border-t border-[var(--border)]">
+                        <Label className="mb-2 block font-semibold text-sm">Refine by Sub-Categories</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {availableSubcategories.map(subcategory => (
+                            <button
+                              key={subcategory}
+                              type="button"
+                              onClick={() => handleSubcategoryToggle(subcategory)}
+                              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                                selectedSubcategories.includes(subcategory)
+                                  ? 'bg-blue-500 text-white'
+                                  : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                              }`}
+                            >
+                              {subcategory}
+                            </button>
+                          ))}
+                        </div>
+                        {selectedSubcategories.length > 0 && (
+                          <p className="text-xs text-[var(--muted-foreground)] mt-2">
+                            {selectedSubcategories.length} sub-categories selected
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Controls */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[var(--border)]">
+                      <div className="text-sm text-[var(--muted-foreground)]">
+                        {digestArticles?.length || 0} articles • Mixed from all selected categories
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Select
+                          value={numArticlesToShow.toString()}
+                          onValueChange={(value) => setNumArticlesToShow(parseInt(value))}
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="5">5 articles</SelectItem>
+                            <SelectItem value="10">10 articles</SelectItem>
+                            <SelectItem value="15">15 articles</SelectItem>
+                            <SelectItem value="20">20 articles</SelectItem>
+                            <SelectItem value="30">30 articles</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          onClick={handleSendDigestEmail}
+                          disabled={isSendingEmail || !digestArticles || digestArticles.length === 0}
+                          className="gap-2"
+                        >
+                          {isSendingEmail ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Sending...
+                            </>
+                          ) : emailSent ? (
+                            <>
+                              <CheckCircle className="w-4 h-4" />
+                              Sent!
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4" />
+                              Email Copy
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -351,18 +470,23 @@ export default function DailyDigest() {
                               <span className="px-2 py-1 bg-[var(--primary)] text-white rounded text-xs font-semibold uppercase">
                                 {article.category}
                               </span>
+                              {article.labels && article.labels.length > 0 && (
+                                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-semibold">
+                                  {article.labels[0]}
+                                </span>
+                              )}
                               {article.is_editor_pick && (
                                 <span className="px-2 py-1 bg-yellow-400 text-yellow-900 rounded text-xs font-semibold">
                                   Editor's Pick
                                 </span>
                               )}
                               {article.is_featured && (
-                                <span className="px-2 py-1 bg-blue-500 text-white rounded text-xs font-semibold">
+                                <span className="px-2 py-1 bg-green-500 text-white rounded text-xs font-semibold">
                                   Featured
                                 </span>
                               )}
                             </div>
-                            
+
                             <Link to={createPageUrl("Article") + `?id=${article.id}`}>
                               <h3 className="text-xl font-bold mb-2 hover:text-[var(--accent)] transition-colors">
                                 {article.title}
@@ -543,7 +667,7 @@ export default function DailyDigest() {
                     </p>
                     <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
                       <p className="text-sm text-amber-800 dark:text-amber-300">
-                        <strong>Note:</strong> Automated scheduling requires server-side configuration. 
+                        <strong>Note:</strong> Automated scheduling requires server-side configuration.
                         Use the "Email Copy" button in the digest reader to send immediate copies.
                       </p>
                     </div>
