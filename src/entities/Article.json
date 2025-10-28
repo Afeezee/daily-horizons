@@ -117,14 +117,8 @@
     "category"
   ],
   "rls": {
-    "create": {
-      "user_condition": {
-        "email": {
-          "$exists": true
-        }
-      }
-    },
-    "update": {
+    "create": {},
+    "delete": {
       "$or": [
         {
           "created_by": "{{user.email}}"
@@ -136,7 +130,8 @@
         }
       ]
     },
-    "delete": {
+    "read": {},
+    "update": {
       "$or": [
         {
           "created_by": "{{user.email}}"
