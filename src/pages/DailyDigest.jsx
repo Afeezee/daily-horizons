@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Sparkles, Clock, FileText, Mail, CheckCircle, Rss } from "lucide-react";
+import { Sparkles, Clock, FileText, Mail, CheckCircle, Rss, AlertCircle } from "lucide-react";
 import DigestPreview from "../components/digest/DigestPreview";
 
 const categories = ["News", "Opinion", "Culture", "Lifestyle", "Sport", "Education", "Technology"];
@@ -237,7 +237,7 @@ export default function DailyDigest() {
             </CardContent>
           </Card>
 
-          {/* Info & Preview Card */}
+          {/* Info Card */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -263,9 +263,9 @@ export default function DailyDigest() {
                     <span className="font-bold text-purple-600">2</span>
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Short Summaries</h4>
+                    <h4 className="font-semibold mb-1">Email Delivery</h4>
                     <p className="text-sm text-[var(--muted-foreground)]">
-                      Each article includes a concise 1-paragraph summary so you can quickly scan
+                      Digest delivered to your inbox at your preferred time with beautifully formatted articles
                     </p>
                   </div>
                 </div>
@@ -276,7 +276,7 @@ export default function DailyDigest() {
                   <div>
                     <h4 className="font-semibold mb-1">Read When Ready</h4>
                     <p className="text-sm text-[var(--muted-foreground)]">
-                      Click through to read full articles when you have time
+                      Click through from your email to read full articles when you have time
                     </p>
                   </div>
                 </div>
@@ -287,7 +287,7 @@ export default function DailyDigest() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Mail className="w-5 h-5" />
-                  Delivery
+                  Delivery Details
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -296,8 +296,9 @@ export default function DailyDigest() {
                   <strong>{formData.delivery_time}</strong> {formData.frequency === "daily" ? "every day" : formData.frequency.replace("_", " ")}.
                 </p>
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-800 dark:text-blue-300">
-                    💡 Tip: You can also view your digest anytime in the app
+                  <p className="text-sm text-blue-800 dark:text-blue-300 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>Note: Automated email scheduling requires server-side setup. Use the "Send Test Email" button in the preview below to test email delivery manually.</span>
                   </p>
                 </div>
               </CardContent>
@@ -305,9 +306,9 @@ export default function DailyDigest() {
           </div>
         </div>
 
-        {/* Preview Section */}
+        {/* Live Preview Section */}
         <div className="mt-12">
-          <DigestPreview preferences={formData} />
+          <DigestPreview preferences={formData} userEmail={user?.email} />
         </div>
       </div>
     </div>
