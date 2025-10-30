@@ -167,10 +167,11 @@ export default function Layout({ children, currentPageName }) {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight">Daily Horizons</h1>
-                  <p className="text-xs text-[var(--muted-foreground)] hidden sm:block">Democratising stories</p>
+                  <p className="text-xs text-[var(--muted-foreground)] hidden sm:block">Empowering News and Insights</p>
                 </div>
               </Link>
 
+              {/* ... keep existing code (search form and mobile menu button) ... */}
               <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md">
                 <div className="relative w-full">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
@@ -311,10 +312,11 @@ export default function Layout({ children, currentPageName }) {
                   <h3 className="font-bold text-lg">Daily Horizons</h3>
                 </div>
                 <p className="text-sm text-[var(--muted-foreground)]">
-                  Democratising stories creation and consumption. Empowering journalists and observers worldwide.
+                  We deliver knowledge that empowers. Daily Horizons is dedicated to providing credible, insightful news, enabling you to understand the world and make informed decisions. Your access to critical information, democratized.
                 </p>
               </div>
 
+              {/* ... keep existing code (Sections, About, Stay Updated columns) ... */}
               <div>
                 <h4 className="font-semibold mb-3">Sections</h4>
                 <div className="space-y-2 text-sm">

@@ -223,9 +223,9 @@ export default function DailyDigest() {
           `).join('')}
           
           <div class="footer">
-            <p><strong>Daily Horizons</strong> - Democratising stories</p>
-            <p>Your personalized digest</p>
-            <p><a href="${window.location.origin}${createPageUrl("DailyDigest")}" style="color: #c41e3a;">Read more digests</a></p>
+            <p><strong>Daily Horizons</strong> - Empowering News and Insights</p>
+            <p>Knowledge that empowers, delivered to your inbox</p>
+            <p><a href="${window.location.origin}${createPageUrl("DailyDigest")}" style="color: #c41e3a;">Manage your digest preferences</a></p>
           </div>
         </body>
         </html>
