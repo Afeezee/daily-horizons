@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import {
+import { 
   Search, Moon, Sun, User, PenSquare, Menu, X,
   ChevronDown, Newspaper, MessageSquare, Palette, Heart,
   Trophy, GraduationCap, Cpu, BookOpen, Home, Rss
@@ -90,7 +90,7 @@ export default function Layout({ children, currentPageName }) {
           --accent: #0066cc;
           --border: #e7e5e4;
         }
-
+        
         .dark {
           --background: #0a0a0a;
           --foreground: #ededed;
@@ -105,7 +105,7 @@ export default function Layout({ children, currentPageName }) {
           --accent: #3b82f6;
           --border: #2a2a2a;
         }
-
+        
         body {
           background: var(--background);
           color: var(--foreground);
@@ -167,7 +167,7 @@ export default function Layout({ children, currentPageName }) {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight">Daily Horizons</h1>
-                  <p className="text-xs text-[var(--muted-foreground)] hidden sm:block">Democratising Stories</p>
+                  <p className="text-xs text-[var(--muted-foreground)] hidden sm:block">Democratising stories</p>
                 </div>
               </Link>
 
@@ -352,9 +352,9 @@ export default function Layout({ children, currentPageName }) {
               <p className="mb-2">© {new Date().getFullYear()} Daily Horizons. All rights reserved.</p>
               <p>
                 Developed by{' '}
-                <a
-                  href="https://cereustechnologies.com"
-                  target="_blank"
+                <a 
+                  href="https://cereustechnologies.com" 
+                  target="_blank" 
                   rel="noopener noreferrer"
                   className="text-[var(--accent)] hover:underline font-medium"
                 >
