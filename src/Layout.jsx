@@ -35,6 +35,8 @@ export default function Layout({ children, currentPageName }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
 
+  const [logoUrl, setLogoUrl] = useState(null);
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -55,6 +57,23 @@ export default function Layout({ children, currentPageName }) {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const generateLogo = async () => {
+      try {
+        const { url } = await base44.integrations.Core.GenerateImage({
+          prompt: "Professional newspaper logo for 'Daily Horizons' - clean, modern design with a stylized horizon line and sun rays, incorporating a newspaper fold element. Minimalist, corporate style, suitable for header. Red and dark blue color scheme. High quality, transparent background preferable.",
+        });
+        setLogoUrl(url);
+      } catch (error) {
+        console.error("Error generating logo:", error);
+      }
+    };
+    
+    if (!logoUrl) {
+      generateLogo();
+    }
+  }, [logoUrl]); // Added logoUrl to dependency array to avoid re-generating if already present
 
   const toggleTheme = async () => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -162,8 +181,12 @@ export default function Layout({ children, currentPageName }) {
             {/* Logo and Search */}
             <div className="py-4 flex items-center justify-between gap-4">
               <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <div className="w-10 h-10 bg-[var(--primary)] rounded flex items-center justify-center">
-                  <Newspaper className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 bg-[var(--primary)] rounded flex items-center justify-center overflow-hidden">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Daily Horizons Logo" className="w-full h-full object-contain" />
+                  ) : (
+                    <Newspaper className="w-6 h-6 text-white" />
+                  )}
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight">Daily Horizons</h1>
@@ -171,7 +194,6 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               </Link>
 
-              {/* ... keep existing code (search form and mobile menu button) ... */}
               <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md">
                 <div className="relative w-full">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
@@ -316,7 +338,6 @@ export default function Layout({ children, currentPageName }) {
                 </p>
               </div>
 
-              {/* ... keep existing code (Sections, About, Stay Updated columns) ... */}
               <div>
                 <h4 className="font-semibold mb-3">Sections</h4>
                 <div className="space-y-2 text-sm">
