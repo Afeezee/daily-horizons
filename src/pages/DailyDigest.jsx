@@ -223,7 +223,7 @@ export default function DailyDigest() {
           `).join('')}
           
           <div class="footer">
-            <p><strong>Daily Horizons</strong> - Democratising News</p>
+            <p><strong>Daily Horizons</strong> - Democratising Stories</p>
             <p>Your personalized digest</p>
             <p><a href="${window.location.origin}${createPageUrl("DailyDigest")}" style="color: #c41e3a;">Read more digests</a></p>
           </div>

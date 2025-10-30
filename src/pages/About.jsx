@@ -22,7 +22,7 @@ export default function About() {
           </div>
           <h1 className="text-5xl font-bold mb-6">About Daily Horizons</h1>
           <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-            Democratising news creation and consumption by empowering both journalists 
+            Democratising stories creation and consumption by empowering both journalists 
             and everyday observers to publish credible, well-structured stories.
           </p>
         </div>
