@@ -35,7 +35,7 @@ export default function Layout({ children, currentPageName }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
 
-  const [logoUrl, setLogoUrl] = useState(null);
+  const logoUrl = "https://i.ibb.co/1tH3xRyp/logo.png";
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -57,23 +57,6 @@ export default function Layout({ children, currentPageName }) {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  useEffect(() => {
-    const generateLogo = async () => {
-      try {
-        const { url } = await base44.integrations.Core.GenerateImage({
-          prompt: "Professional newspaper logo for 'Daily Horizons' - clean, modern design with a stylized horizon line and sun rays, incorporating a newspaper fold element. Minimalist, corporate style, suitable for header. Red and dark blue color scheme. High quality, transparent background preferable.",
-        });
-        setLogoUrl(url);
-      } catch (error) {
-        console.error("Error generating logo:", error);
-      }
-    };
-    
-    if (!logoUrl) {
-      generateLogo();
-    }
-  }, [logoUrl]); // Added logoUrl to dependency array to avoid re-generating if already present
 
   const toggleTheme = async () => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -182,11 +165,10 @@ export default function Layout({ children, currentPageName }) {
             <div className="py-4 flex items-center justify-between gap-4">
               <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                 <div className="w-10 h-10 bg-[var(--primary)] rounded flex items-center justify-center overflow-hidden">
-                  {logoUrl ? (
-                    <img src={logoUrl} alt="Daily Horizons Logo" className="w-full h-full object-contain" />
-                  ) : (
-                    <Newspaper className="w-6 h-6 text-white" />
-                  )}
+                  <img src={logoUrl} alt="Daily Horizons Logo" className="w-full h-full object-contain" onError={(e) => {
+                    e.target.style.display = 'none'; // Hide the broken image
+                    e.target.parentElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8z"></path></svg>'; // Replace with Newspaper icon SVG
+                  }} />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight">Daily Horizons</h1>
