@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -39,12 +40,17 @@ export default function Article() {
   const { data: article, isLoading } = useQuery({
     queryKey: ['article', articleId],
     queryFn: async () => {
-      const articles = await base44.entities.Article.filter({ id: articleId });
+      const articles = await base44.entities.Article.filter({ id: articleId, status: "published" });
       if (articles.length > 0) {
-        // Increment view count
-        await base44.entities.Article.update(articleId, {
-          views_count: (articles[0].views_count || 0) + 1
-        });
+        // Try to increment view count, but don't fail if it doesn't work
+        try {
+          await base44.entities.Article.update(articleId, {
+            views_count: (articles[0].views_count || 0) + 1
+          });
+        } catch (error) {
+          // Silently fail - user doesn't have permission to update, but can still read
+          console.log("Could not increment view count (permission denied)");
+        }
         return articles[0];
       }
       return null;
