@@ -201,6 +201,34 @@ Return ONLY the corrected HTML content with proper spacing.`,
     factCheckResult.overall_rating !== "verified" && 
     factCheckResult.overall_rating !== "error";
 
+  // Helper function to safely parse URLs and extract hostname
+  const getSourceHostname = (source) => {
+    try {
+      // Add protocol if missing
+      const urlString = source.startsWith('http') ? source : `https://${source}`;
+      const url = new URL(urlString);
+      return url.hostname;
+    } catch (error) {
+      // If URL parsing fails, return the source as-is (truncated)
+      return source.length > 50 ? source.substring(0, 50) + '...' : source;
+    }
+  };
+
+  // Helper function to get valid href for links
+  const getValidHref = (source) => {
+    try {
+      // Add protocol if missing
+      if (source.startsWith('http')) {
+        return source;
+      }
+      return `https://${source}`;
+    } catch (error) {
+      // If URL parsing fails, return the original source, browser might handle it.
+      // Or if it's truly unparsable, it won't be a valid link anyway.
+      return source;
+    }
+  };
+
   if (compact) {
     return (
       <Button
@@ -407,13 +435,13 @@ Return ONLY the corrected HTML content with proper spacing.`,
                             {claim.sources.map((source, idx) => (
                               <a
                                 key={idx}
-                                href={source}
+                                href={getValidHref(source)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline group"
                               >
                                 <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                                <span className="truncate">{new URL(source).hostname}</span>
+                                <span className="truncate">{getSourceHostname(source)}</span>
                               </a>
                             ))}
                           </div>
