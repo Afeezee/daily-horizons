@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Send, Loader2, Upload, Sparkles, X, Edit3 } from "lucide-react";
+import { ArrowLeft, Save, Send, Loader2, Upload, Sparkles, X, Edit3, Wand2, Shield } from "lucide-react";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {
@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import FactCheckPanel from "../articles/FactCheckPanel";
 
 const categories = ["News", "Opinion", "Culture", "Lifestyle", "Sport", "Education", "Technology"];
 
@@ -50,6 +51,10 @@ export default function ArticleEditor({ article, user, onClose }) {
   const [isPublishing, setIsPublishing] = useState(false);
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [imagePrompt, setImagePrompt] = useState("");
+  const [isAugmenting, setIsAugmenting] = useState(false);
+  const [showAugmentDialog, setShowAugmentDialog] = useState(false);
+  const [augmentedContent, setAugmentedContent] = useState("");
+  const [showFactCheck, setShowFactCheck] = useState(false);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -84,7 +89,6 @@ export default function ArticleEditor({ article, user, onClose }) {
       return;
     }
     
-    // Set default prompt based on title
     const defaultPrompt = `Professional news article header image for: ${formData.title}. Modern, high quality, editorial style.`;
     setImagePrompt(defaultPrompt);
     setShowPromptDialog(true);
@@ -108,6 +112,57 @@ export default function ArticleEditor({ article, user, onClose }) {
       alert("Error generating image. Please try again.");
     }
     setIsGeneratingImage(false);
+  };
+
+  const handleAugmentContent = async () => {
+    if (!formData.body || formData.body.length < 50) {
+      alert("Please write some content first (at least 50 characters)");
+      return;
+    }
+
+    setIsAugmenting(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a professional editor and journalist. Rewrite and enhance the following article to make it more engaging, well-structured, and professionally written.
+
+Article Details:
+- Title: ${formData.title}
+- Category: ${formData.category}
+- Labels: ${formData.labels.join(", ")}
+- Current Content: ${formData.body.replace(/<[^>]*>/g, ' ')}
+
+Guidelines:
+1. Maintain the core facts and message
+2. Improve clarity, flow, and readability
+3. Use appropriate tone for ${formData.category} journalism
+4. Add engaging transitions between paragraphs
+5. Ensure proper structure: introduction, body, conclusion
+6. Use compelling language suitable for the category
+7. Return the content in clean HTML format with <p>, <strong>, <em> tags
+
+Return ONLY the rewritten HTML content, nothing else.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            rewritten_content: { type: "string" }
+          }
+        }
+      });
+
+      setAugmentedContent(result.rewritten_content);
+      setShowAugmentDialog(true);
+    } catch (error) {
+      console.error("Error augmenting content:", error);
+      alert("Error enhancing content. Please try again.");
+    } finally {
+      setIsAugmenting(false);
+    }
+  };
+
+  const handleAcceptAugmented = () => {
+    handleInputChange("body", augmentedContent);
+    setShowAugmentDialog(false);
+    setAugmentedContent("");
   };
 
   const handleSaveDraft = async () => {
@@ -337,9 +392,31 @@ Be thorough but fair. News articles can be critical but must be factual and prof
             </div>
           </div>
 
-          {/* Body */}
+          {/* Body with AI Augmentation */}
           <div>
-            <Label>Article Body *</Label>
+            <div className="flex items-center justify-between mb-2">
+              <Label>Article Body *</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAugmentContent}
+                disabled={isAugmenting || !formData.body}
+                className="gap-2"
+              >
+                {isAugmenting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Enhancing...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-4 h-4" />
+                    AI Enhance
+                  </>
+                )}
+              </Button>
+            </div>
             <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-[var(--border)]">
               <ReactQuill
                 theme="snow"
@@ -416,6 +493,28 @@ Be thorough but fair. News articles can be critical but must be factual and prof
               />
             </div>
           </div>
+
+          {/* Fact Check Section */}
+          {formData.title && formData.body && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                  Fact Check Your Article
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFactCheck(!showFactCheck)}
+                >
+                  {showFactCheck ? "Hide" : "Show"} Fact Check
+                </Button>
+              </div>
+              {showFactCheck && (
+                <FactCheckPanel article={{ ...formData, id: article?.id }} />
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -485,6 +584,64 @@ Be thorough but fair. News articles can be critical but must be factual and prof
                     Generate Image
                   </>
                 )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Content Augmentation Dialog */}
+      <Dialog open={showAugmentDialog} onOpenChange={setShowAugmentDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wand2 className="w-5 h-5 text-purple-600" />
+              AI-Enhanced Content
+            </DialogTitle>
+            <DialogDescription>
+              Review the AI-enhanced version of your article below
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
+                <strong>Note:</strong> The AI has restructured and enhanced your content for better readability and engagement.
+                Review carefully before accepting.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">Original Content:</h4>
+                <div 
+                  className="p-4 bg-[var(--muted)] rounded-lg max-h-48 overflow-y-auto"
+                  dangerouslySetInnerHTML={{ __html: formData.body }}
+                />
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Enhanced Content:</h4>
+                <div 
+                  className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg max-h-64 overflow-y-auto"
+                  dangerouslySetInnerHTML={{ __html: augmentedContent }}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowAugmentDialog(false)}
+              >
+                Keep Original
+              </Button>
+              <Button
+                onClick={handleAcceptAugmented}
+                className="gap-2"
+              >
+                <Wand2 className="w-4 h-4" />
+                Use Enhanced Version
               </Button>
             </div>
           </div>

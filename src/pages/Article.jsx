@@ -6,20 +6,28 @@ import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
-  Clock, User, Eye, Heart, Bookmark, Share2, MessageSquare,
+  Clock, User, Eye, Heart, Bookmark, Share2, MessageSquare, Shield,
   Twitter, Facebook, Linkedin, Copy, CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import CommentSection from "../components/articles/CommentSection";
 import ShareMenu from "../components/articles/ShareMenu";
 import RelatedArticles from "../components/articles/RelatedArticles";
+import FactCheckPanel from "../components/articles/FactCheckPanel";
 
 export default function Article() {
   const urlParams = new URLSearchParams(window.location.search);
   const articleId = urlParams.get("id");
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [showFactCheck, setShowFactCheck] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -255,6 +263,15 @@ export default function Article() {
                 </Button>
               </>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFactCheck(true)}
+              className="gap-2"
+            >
+              <Shield className="w-4 h-4" />
+              Fact Check
+            </Button>
           </div>
           <ShareMenu article={article} />
         </div>
@@ -315,6 +332,16 @@ export default function Article() {
           <RelatedArticles category={article.category} currentArticleId={articleId} />
         </div>
       </div>
+
+      {/* Fact Check Dialog */}
+      <Dialog open={showFactCheck} onOpenChange={setShowFactCheck}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Fact Check: {article.title}</DialogTitle>
+          </DialogHeader>
+          <FactCheckPanel article={article} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
