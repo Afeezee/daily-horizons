@@ -13,6 +13,7 @@ export default function FactCheckPanel({ article, compact = false }) {
   const handleFactCheck = async () => {
     setIsChecking(true);
     setShowResults(true);
+    setFactCheckResult(null); // Clear previous results
     
     try {
       const result = await base44.integrations.Core.InvokeLLM({
@@ -84,41 +85,58 @@ Be thorough and objective. Base verdicts on verifiable facts from credible sourc
   const getRatingIcon = (rating) => {
     switch (rating) {
       case "verified":
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
+        return <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />;
       case "mostly_accurate":
-        return <CheckCircle className="w-5 h-5 text-blue-600" />;
+        return <CheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />;
       case "mixed":
-        return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
+        return <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />;
       case "mostly_false":
-        return <XCircle className="w-5 h-5 text-orange-600" />;
+        return <XCircle className="w-6 h-6 text-orange-600 dark:text-orange-400" />;
       case "false":
-        return <XCircle className="w-5 h-5 text-red-600" />;
+        return <XCircle className="w-6 h-6 text-red-600 dark:text-red-400" />;
       default:
-        return <Shield className="w-5 h-5 text-gray-600" />;
+        return <Shield className="w-6 h-6 text-gray-600 dark:text-gray-400" />;
     }
   };
 
   const getRatingColor = (rating) => {
     switch (rating) {
       case "verified":
-        return "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800";
+        return "bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700";
       case "mostly_accurate":
-        return "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800";
+        return "bg-blue-50 dark:bg-blue-950 border-blue-300 dark:border-blue-700";
       case "mixed":
-        return "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800";
+        return "bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700";
       case "mostly_false":
-        return "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800";
+        return "bg-orange-50 dark:bg-orange-950 border-orange-300 dark:border-orange-700";
       case "false":
-        return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800";
+        return "bg-red-50 dark:bg-red-950 border-red-300 dark:border-red-700";
       default:
-        return "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800";
+        return "bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-700";
+    }
+  };
+
+  const getRatingTextColor = (rating) => {
+    switch (rating) {
+      case "verified":
+        return "text-green-900 dark:text-green-100";
+      case "mostly_accurate":
+        return "text-blue-900 dark:text-blue-100";
+      case "mixed":
+        return "text-yellow-900 dark:text-yellow-100";
+      case "mostly_false":
+        return "text-orange-900 dark:text-orange-100";
+      case "false":
+        return "text-red-900 dark:text-red-100";
+      default:
+        return "text-gray-900 dark:text-gray-100";
     }
   };
 
   const getVerdictColor = (verdict) => {
-    if (verdict?.includes("true")) return "text-green-600 dark:text-green-400";
-    if (verdict?.includes("false")) return "text-red-600 dark:text-red-400";
-    return "text-yellow-600 dark:text-yellow-400";
+    if (verdict?.includes("true")) return "text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30";
+    if (verdict?.includes("false")) return "text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30";
+    return "text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/30";
   };
 
   if (compact) {
@@ -148,60 +166,95 @@ Be thorough and objective. Base verdicts on verifiable facts from credible sourc
   return (
     <div className="space-y-4">
       {!showResults ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-blue-600" />
-              AI-Powered Fact Check
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-[var(--muted-foreground)] mb-4">
-              Our AI will analyze this article's factual claims by searching credible sources across the web
-              and provide a detailed verification report with evidence.
-            </p>
-            <Button
-              onClick={handleFactCheck}
-              disabled={isChecking}
-              className="gap-2"
-            >
-              {isChecking ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Analyzing Article...
-                </>
-              ) : (
-                <>
-                  <Shield className="w-4 h-4" />
-                  Start Fact Check
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+              <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                AI-Powered Fact Check
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                Our AI will analyze this article's factual claims by searching credible sources across the web
+                and provide a detailed verification report with evidence and source links.
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={handleFactCheck}
+            disabled={isChecking}
+            className="w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            size="lg"
+          >
+            {isChecking ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Analyzing Article...
+              </>
+            ) : (
+              <>
+                <Shield className="w-5 h-5" />
+                Start Fact Check
+              </>
+            )}
+          </Button>
+        </div>
+      ) : isChecking ? (
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-8">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Analyzing Article...
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">
+                Our AI is searching credible sources across the web to verify the claims in this article. 
+                This may take 15-30 seconds.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+              <span>Checking facts</span>
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse delay-75"></div>
+              <span>Verifying sources</span>
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse delay-150"></div>
+            </div>
+          </div>
+        </div>
       ) : factCheckResult ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-blue-600" />
-              Fact Check Results
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3 mb-2">
+              <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                Fact Check Results
+              </h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Analysis completed • {factCheckResult.claims?.length || 0} claims verified
+            </p>
+          </div>
+
+          <div className="p-6 space-y-6">
             {/* Overall Rating */}
-            <Alert className={getRatingColor(factCheckResult.overall_rating)}>
-              <div className="flex items-start gap-3">
+            <Alert className={`${getRatingColor(factCheckResult.overall_rating)} border-2`}>
+              <div className="flex items-start gap-4">
                 {getRatingIcon(factCheckResult.overall_rating)}
                 <div className="flex-1">
-                  <h4 className="font-semibold mb-1 capitalize">
+                  <h4 className={`text-lg font-bold mb-2 capitalize ${getRatingTextColor(factCheckResult.overall_rating)}`}>
                     {factCheckResult.overall_rating?.replace("_", " ")}
                     {factCheckResult.confidence_score && (
-                      <span className="text-sm font-normal ml-2">
+                      <span className="text-sm font-normal ml-3">
                         (Confidence: {factCheckResult.confidence_score}%)
                       </span>
                     )}
                   </h4>
-                  <AlertDescription>{factCheckResult.summary}</AlertDescription>
+                  <AlertDescription className={`text-sm leading-relaxed ${getRatingTextColor(factCheckResult.overall_rating)}`}>
+                    {factCheckResult.summary}
+                  </AlertDescription>
                 </div>
               </div>
             </Alert>
@@ -209,49 +262,61 @@ Be thorough and objective. Base verdicts on verifiable facts from credible sourc
             {/* Individual Claims */}
             {factCheckResult.claims && factCheckResult.claims.length > 0 && (
               <div className="space-y-4">
-                <h4 className="font-semibold text-sm">Detailed Analysis:</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Detailed Analysis
+                  </h4>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {factCheckResult.claims.length} {factCheckResult.claims.length === 1 ? 'claim' : 'claims'} checked
+                  </span>
+                </div>
+                
                 {factCheckResult.claims.map((claim, index) => (
                   <div
                     key={index}
-                    className="p-4 border border-[var(--border)] rounded-lg space-y-2"
+                    className="p-5 border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 space-y-3"
                   >
-                    <div className="flex items-start gap-2">
-                      <span className="font-semibold text-sm text-[var(--muted-foreground)]">
-                        Claim {index + 1}:
-                      </span>
-                      <p className="text-sm flex-1">{claim.claim}</p>
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-base font-medium text-gray-900 dark:text-gray-100 leading-relaxed">
+                          {claim.claim}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-[var(--muted-foreground)]">
-                        Verdict:
-                      </span>
-                      <span className={`text-xs font-bold uppercase ${getVerdictColor(claim.verdict)}`}>
-                        {claim.verdict}
-                      </span>
-                    </div>
+                    <div className="pl-11">
+                      <div className="inline-flex items-center gap-2 mb-3">
+                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                          Verdict:
+                        </span>
+                        <span className={`text-xs font-bold uppercase px-3 py-1 rounded-full ${getVerdictColor(claim.verdict)}`}>
+                          {claim.verdict?.replace("_", " ")}
+                        </span>
+                      </div>
 
-                    <div className="pt-2 border-t border-[var(--border)]">
-                      <p className="text-sm text-[var(--muted-foreground)] mb-2">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-3 bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
                         {claim.evidence}
                       </p>
                       
                       {claim.sources && claim.sources.length > 0 && (
-                        <div className="mt-2">
-                          <p className="text-xs font-semibold text-[var(--muted-foreground)] mb-1">
-                            Sources:
+                        <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+                          <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+                            Sources ({claim.sources.length}):
                           </p>
-                          <div className="space-y-1">
+                          <div className="space-y-1.5">
                             {claim.sources.map((source, idx) => (
                               <a
                                 key={idx}
                                 href={source}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                                className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline group"
                               >
-                                <ExternalLink className="w-3 h-3" />
-                                {new URL(source).hostname}
+                                <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                                <span className="truncate">{new URL(source).hostname}</span>
                               </a>
                             ))}
                           </div>
@@ -263,17 +328,25 @@ Be thorough and objective. Base verdicts on verifiable facts from credible sourc
               </div>
             )}
 
-            <div className="pt-4 border-t border-[var(--border)]">
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Fact-check powered by AI • Sources verified from credible websites
+              </p>
               <Button
-                onClick={() => setShowResults(false)}
+                onClick={() => {
+                  setShowResults(false);
+                  setFactCheckResult(null);
+                }}
                 variant="outline"
                 size="sm"
+                className="gap-2"
               >
+                <Shield className="w-4 h-4" />
                 Run New Check
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ) : null}
     </div>
   );
