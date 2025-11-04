@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -61,6 +62,15 @@ export default function PublisherDashboard() {
     }
   }, [publisherProfile]);
 
+  const deleteMutation = useMutation({
+    mutationFn: async (articleId) => {
+      await base44.entities.Article.delete(articleId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myArticles'] });
+    },
+  });
+
   const handleStartNewArticle = () => {
     if (!publisherProfile?.accepted_terms) {
       setShowTerms(true);
@@ -73,6 +83,21 @@ export default function PublisherDashboard() {
   const handleEditArticle = (article) => {
     setEditingArticle(article);
     setShowEditor(true);
+  };
+
+  const handleDeleteArticle = async (article) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${article.title}"?\n\nThis action cannot be undone.`
+    );
+    
+    if (confirmed) {
+      try {
+        await deleteMutation.mutateAsync(article.id);
+      } catch (error) {
+        alert("Error deleting article. Please try again.");
+        console.error("Delete error:", error);
+      }
+    }
   };
 
   if (!user || profileLoading) {
@@ -158,7 +183,9 @@ export default function PublisherDashboard() {
             <ArticlesList
               articles={publishedArticles}
               onEdit={handleEditArticle}
+              onDelete={handleDeleteArticle}
               isLoading={articlesLoading}
+              isDeleting={deleteMutation.isPending}
             />
           </TabsContent>
 
@@ -166,7 +193,9 @@ export default function PublisherDashboard() {
             <ArticlesList
               articles={draftArticles}
               onEdit={handleEditArticle}
+              onDelete={handleDeleteArticle}
               isLoading={articlesLoading}
+              isDeleting={deleteMutation.isPending}
             />
           </TabsContent>
 
@@ -174,7 +203,9 @@ export default function PublisherDashboard() {
             <ArticlesList
               articles={pendingArticles}
               onEdit={handleEditArticle}
+              onDelete={handleDeleteArticle}
               isLoading={articlesLoading}
+              isDeleting={deleteMutation.isPending}
               isPending
             />
           </TabsContent>

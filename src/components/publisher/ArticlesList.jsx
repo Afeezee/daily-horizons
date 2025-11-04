@@ -2,10 +2,10 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Eye, Heart, MessageSquare, Edit, ExternalLink, AlertCircle } from "lucide-react";
+import { Eye, Heart, MessageSquare, Edit, ExternalLink, AlertCircle, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function ArticlesList({ articles, onEdit, isLoading, isPending = false }) {
+export default function ArticlesList({ articles, onEdit, onDelete, isLoading, isDeleting = false, isPending = false }) {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -90,7 +90,7 @@ export default function ArticlesList({ articles, onEdit, isLoading, isPending = 
                 </div>
               )}
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -108,6 +108,16 @@ export default function ArticlesList({ articles, onEdit, isLoading, isPending = 
                     </Button>
                   </Link>
                 )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDelete(article)}
+                  disabled={isDeleting}
+                  className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </Button>
               </div>
             </div>
           </div>
