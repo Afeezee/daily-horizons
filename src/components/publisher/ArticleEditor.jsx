@@ -138,11 +138,12 @@ Guidelines:
 4. Add engaging transitions between paragraphs
 5. Ensure proper structure: introduction, body, conclusion
 6. Use compelling language suitable for the category
-7. Return the content in clean HTML format with <p>, <strong>, <em> tags
-8. IMPORTANT: Add one blank line (empty <p></p> or <br>) after EACH paragraph for proper spacing and readability
-9. Ensure each paragraph is well-spaced and easy to read
+7. Return the content in clean HTML format with <p> tags for paragraphs
+8. CRITICAL SPACING REQUIREMENT: After EVERY closing </p> tag, you MUST add an empty paragraph <p></p> or a <br> tag for visual spacing
+9. Example of correct format: <p>First paragraph content here.</p><p></p><p>Second paragraph content here.</p><p></p><p>Third paragraph...</p>
+10. This blank line spacing is MANDATORY after each and every paragraph without exception
 
-Return ONLY the rewritten HTML content with proper spacing, nothing else.`,
+Return ONLY the rewritten HTML content with mandatory blank lines after each paragraph.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -214,7 +215,6 @@ Return ONLY the rewritten HTML content with proper spacing, nothing else.`,
         articleId = newArticle.id;
       }
 
-      // AI Moderation
       const moderationResult = await base44.integrations.Core.InvokeLLM({
         prompt: `You are a content moderator for a news platform. Analyze the following article for:
 1. Derogatory language or character assassination
@@ -522,20 +522,20 @@ Be thorough but fair. News articles can be critical but must be factual and prof
 
       {/* AI Image Generation Dialog */}
       <Dialog open={showPromptDialog} onOpenChange={setShowPromptDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-800">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
+            <DialogTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+              <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               Generate AI Image
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
               Customize the prompt below to generate the perfect header image for your article
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="imagePrompt" className="mb-2 flex items-center gap-2">
+              <Label htmlFor="imagePrompt" className="mb-2 flex items-center gap-2 text-gray-900 dark:text-gray-100">
                 <Edit3 className="w-4 h-4" />
                 Image Generation Prompt
               </Label>
@@ -545,16 +545,16 @@ Be thorough but fair. News articles can be critical but must be factual and prof
                 onChange={(e) => setImagePrompt(e.target.value)}
                 placeholder="Describe the image you want to generate..."
                 rows={6}
-                className="font-mono text-sm"
+                className="font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
               />
-              <p className="text-xs text-[var(--muted-foreground)] mt-2">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                 Be specific and descriptive. Include details about style, mood, colors, and composition.
               </p>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-              <h4 className="font-semibold text-sm mb-2 text-blue-900 dark:text-blue-300">💡 Tips for better results:</h4>
-              <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-1">
+            <div className="bg-blue-50 dark:bg-blue-950/50 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+              <h4 className="font-semibold text-sm mb-2 text-blue-900 dark:text-blue-100">💡 Tips for better results:</h4>
+              <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
                 <li>• Be specific about the subject matter and style (e.g., "photorealistic", "illustration", "editorial")</li>
                 <li>• Include mood and atmosphere keywords (e.g., "professional", "modern", "dramatic")</li>
                 <li>• Mention specific elements you want featured</li>
@@ -567,13 +567,14 @@ Be thorough but fair. News articles can be critical but must be factual and prof
                 variant="outline"
                 onClick={() => setShowPromptDialog(false)}
                 disabled={isGeneratingImage}
+                className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleGenerateImage}
                 disabled={isGeneratingImage || !imagePrompt.trim()}
-                className="gap-2"
+                className="bg-purple-600 hover:bg-purple-700 text-white gap-2"
               >
                 {isGeneratingImage ? (
                   <>
