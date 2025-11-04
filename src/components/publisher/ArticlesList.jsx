@@ -18,9 +18,14 @@ export default function ArticlesList({ articles, onEdit, onDelete, isLoading, is
   const [factCheckArticle, setFactCheckArticle] = useState(null);
 
   const handleFactCheckRegenerate = (correctedContent, factCheckData) => {
-    // When fact-check correction is available from the dashboard view
-    // Open the article in editor with the corrected content
-    const articleToEdit = { ...factCheckArticle, body: correctedContent };
+    // Pass the corrected content with a flag to auto-open the correction dialog
+    const articleToEdit = { 
+      ...factCheckArticle, 
+      body: factCheckArticle.body, // Keep original body
+      _factCheckCorrectedContent: correctedContent, // Pass corrected content separately
+      _factCheckData: factCheckData, // Pass fact-check data
+      _autoOpenFactCheckCorrection: true // Flag to auto-open the dialog
+    };
     setFactCheckArticle(null);
     onEdit(articleToEdit);
   };

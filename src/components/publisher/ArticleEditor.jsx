@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog";
 import FactCheckPanel from "../articles/FactCheckPanel";
 
@@ -58,6 +59,15 @@ export default function ArticleEditor({ article, user, onClose }) {
   const [showFactCheckCorrectionDialog, setShowFactCheckCorrectionDialog] = useState(false);
   const [factCheckCorrectedContent, setFactCheckCorrectedContent] = useState("");
   const [factCheckResults, setFactCheckResults] = useState(null);
+
+  // Auto-open fact-check correction dialog if article was edited from dashboard with corrections
+  useEffect(() => {
+    if (article?._autoOpenFactCheckCorrection && article?._factCheckCorrectedContent) {
+      setFactCheckCorrectedContent(article._factCheckCorrectedContent);
+      setFactCheckResults(article._factCheckData);
+      setShowFactCheckCorrectionDialog(true);
+    }
+  }, [article]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -543,6 +553,10 @@ Be thorough but fair. News articles can be critical but must be factual and prof
       {/* AI Image Generation Dialog */}
       <Dialog open={showPromptDialog} onOpenChange={setShowPromptDialog}>
         <DialogContent className="max-w-2xl bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-800">
+          <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-gray-100 data-[state=open]:text-gray-500 dark:ring-offset-gray-950 dark:focus:ring-gray-300 dark:data-[state=open]:bg-gray-800 dark:data-[state=open]:text-gray-400 bg-white dark:bg-gray-800 p-2">
+            <X className="h-4 w-4 text-gray-900 dark:text-gray-100" />
+            <span className="sr-only">Close</span>
+          </DialogClose>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
               <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -616,6 +630,10 @@ Be thorough but fair. News articles can be critical but must be factual and prof
       {/* AI Content Augmentation Dialog */}
       <Dialog open={showAugmentDialog} onOpenChange={setShowAugmentDialog}>
         <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-800">
+          <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-gray-100 data-[state=open]:text-gray-500 dark:ring-offset-gray-950 dark:focus:ring-gray-300 dark:data-[state=open]:bg-gray-800 dark:data-[state=open]:text-gray-400 bg-white dark:bg-gray-800 p-2 z-50">
+            <X className="h-4 w-4 text-gray-900 dark:text-gray-100" />
+            <span className="sr-only">Close</span>
+          </DialogClose>
           <DialogHeader className="border-b border-gray-200 dark:border-gray-800 pb-4">
             <DialogTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
               <Wand2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
