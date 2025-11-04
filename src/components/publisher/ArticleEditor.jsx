@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -5,9 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Send, Loader2, Upload, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Save, Send, Loader2, Upload, Sparkles, X, Edit3 } from "lucide-react";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const categories = ["News", "Opinion", "Culture", "Lifestyle", "Sport", "Education", "Technology"];
 
@@ -40,6 +48,8 @@ export default function ArticleEditor({ article, user, onClose }) {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [showPromptDialog, setShowPromptDialog] = useState(false);
+  const [imagePrompt, setImagePrompt] = useState("");
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -68,20 +78,34 @@ export default function ArticleEditor({ article, user, onClose }) {
     setIsUploading(false);
   };
 
-  const handleGenerateImage = async () => {
+  const handleOpenImagePrompt = () => {
     if (!formData.title) {
       alert("Please add a title first");
+      return;
+    }
+    
+    // Set default prompt based on title
+    const defaultPrompt = `Professional news article header image for: ${formData.title}. Modern, high quality, editorial style.`;
+    setImagePrompt(defaultPrompt);
+    setShowPromptDialog(true);
+  };
+
+  const handleGenerateImage = async () => {
+    if (!imagePrompt.trim()) {
+      alert("Please enter a prompt for image generation");
       return;
     }
 
     setIsGeneratingImage(true);
     try {
       const { url } = await base44.integrations.Core.GenerateImage({
-        prompt: `Professional news article header image for: ${formData.title}. Modern, high quality, editorial style.`,
+        prompt: imagePrompt,
       });
       handleInputChange("lead_image_url", url);
+      setShowPromptDialog(false);
     } catch (error) {
       console.error("Error generating image:", error);
+      alert("Error generating image. Please try again.");
     }
     setIsGeneratingImage(false);
   };
@@ -259,11 +283,11 @@ Be thorough but fair. News articles can be critical but must be factual and prof
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleGenerateImage}
+                  onClick={handleOpenImagePrompt}
                   disabled={isGeneratingImage}
                   className="gap-2"
                 >
-                  {isGeneratingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  <Sparkles className="w-4 h-4" />
                   Generate with AI
                 </Button>
               </div>
@@ -394,6 +418,78 @@ Be thorough but fair. News articles can be critical but must be factual and prof
           </div>
         </div>
       </div>
+
+      {/* AI Image Generation Dialog */}
+      <Dialog open={showPromptDialog} onOpenChange={setShowPromptDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              Generate AI Image
+            </DialogTitle>
+            <DialogDescription>
+              Customize the prompt below to generate the perfect header image for your article
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="imagePrompt" className="mb-2 flex items-center gap-2">
+                <Edit3 className="w-4 h-4" />
+                Image Generation Prompt
+              </Label>
+              <Textarea
+                id="imagePrompt"
+                value={imagePrompt}
+                onChange={(e) => setImagePrompt(e.target.value)}
+                placeholder="Describe the image you want to generate..."
+                rows={6}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-[var(--muted-foreground)] mt-2">
+                Be specific and descriptive. Include details about style, mood, colors, and composition.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h4 className="font-semibold text-sm mb-2 text-blue-900 dark:text-blue-300">💡 Tips for better results:</h4>
+              <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-1">
+                <li>• Be specific about the subject matter and style (e.g., "photorealistic", "illustration", "editorial")</li>
+                <li>• Include mood and atmosphere keywords (e.g., "professional", "modern", "dramatic")</li>
+                <li>• Mention specific elements you want featured</li>
+                <li>• Avoid requesting text or logos in the image</li>
+              </ul>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowPromptDialog(false)}
+                disabled={isGeneratingImage}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleGenerateImage}
+                disabled={isGeneratingImage || !imagePrompt.trim()}
+                className="gap-2"
+              >
+                {isGeneratingImage ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Generate Image
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
