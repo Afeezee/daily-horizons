@@ -1,14 +1,16 @@
+
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Shield, Loader2, CheckCircle, AlertTriangle, XCircle, ExternalLink } from "lucide-react";
+import { Shield, Loader2, CheckCircle, AlertTriangle, XCircle, ExternalLink, Wand2 } from "lucide-react";
 
-export default function FactCheckPanel({ article, compact = false }) {
+export default function FactCheckPanel({ article, compact = false, onRegenerateRequest = null }) {
   const [isChecking, setIsChecking] = useState(false);
   const [factCheckResult, setFactCheckResult] = useState(null);
   const [showResults, setShowResults] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   const handleFactCheck = async () => {
     setIsChecking(true);
@@ -139,6 +141,66 @@ Be thorough and objective. Base verdicts on verifiable facts from credible sourc
     return "text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/30";
   };
 
+  const handleRegenerateArticle = async () => {
+    if (!onRegenerateRequest || !factCheckResult) return;
+
+    setIsRegenerating(true);
+    try {
+      // Build a detailed correction prompt based on fact-check results
+      const issuesClaims = factCheckResult.claims
+        ?.filter(c => c.verdict !== "true")
+        .map(c => `- Claim: "${c.claim}"\n  Issue: ${c.verdict}\n  Correction needed: ${c.evidence}`)
+        .join("\n\n");
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a professional editor and fact-checker. Rewrite the following article to correct factual inaccuracies identified in a fact-check analysis.
+
+Article Title: ${article.title}
+Article Category: ${article.category}
+Original Article Content: ${article.body?.replace(/<[^>]*>/g, ' ')}
+
+FACT-CHECK RESULTS:
+Overall Rating: ${factCheckResult.overall_rating}
+Summary: ${factCheckResult.summary}
+
+SPECIFIC ISSUES TO ADDRESS:
+${issuesClaims || "General accuracy improvements needed"}
+
+GUIDELINES FOR CORRECTION:
+1. Maintain the article's voice, tone, and overall structure
+2. Correct ONLY the factual inaccuracies identified in the fact-check
+3. Replace false or misleading claims with accurate information
+4. Add proper attribution and sourcing where needed
+5. Keep the writing style professional and engaging
+6. Preserve the article's core message while ensuring accuracy
+7. Return the content in clean HTML format with <p> tags
+8. CRITICAL: After EVERY closing </p> tag, add an empty paragraph <p></p> for spacing
+9. Do NOT add disclaimers or meta-commentary about the corrections
+
+Return ONLY the corrected HTML content with proper spacing.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            corrected_content: { type: "string" }
+          }
+        }
+      });
+
+      // Pass the corrected content to the parent component
+      onRegenerateRequest(result.corrected_content, factCheckResult);
+    } catch (error) {
+      console.error("Error regenerating article:", error);
+      alert("Error regenerating article. Please try again.");
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  const shouldShowRegenerate = onRegenerateRequest && 
+    factCheckResult && 
+    factCheckResult.overall_rating !== "verified" && 
+    factCheckResult.overall_rating !== "error";
+
   if (compact) {
     return (
       <Button
@@ -258,6 +320,41 @@ Be thorough and objective. Base verdicts on verifiable facts from credible sourc
                 </div>
               </div>
             </Alert>
+
+            {/* Regenerate Article Option */}
+            {shouldShowRegenerate && (
+              <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-300 dark:border-amber-800 rounded-lg">
+                <div className="flex items-start gap-3 mb-3">
+                  <Wand2 className="w-5 h-5 text-amber-700 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                      Accuracy Issues Detected
+                    </h4>
+                    <p className="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
+                      The fact-check found some inaccuracies. You can automatically fix these issues using AI to rewrite 
+                      the affected parts while maintaining your article's voice and message.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleRegenerateArticle}
+                  disabled={isRegenerating}
+                  className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  {isRegenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Fixing Article...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4" />
+                      Fix Article Based on Fact-Check
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
 
             {/* Individual Claims */}
             {factCheckResult.claims && factCheckResult.claims.length > 0 && (

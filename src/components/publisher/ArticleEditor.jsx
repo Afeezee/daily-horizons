@@ -55,6 +55,9 @@ export default function ArticleEditor({ article, user, onClose }) {
   const [showAugmentDialog, setShowAugmentDialog] = useState(false);
   const [augmentedContent, setAugmentedContent] = useState("");
   const [showFactCheck, setShowFactCheck] = useState(false);
+  const [showFactCheckCorrectionDialog, setShowFactCheckCorrectionDialog] = useState(false);
+  const [factCheckCorrectedContent, setFactCheckCorrectedContent] = useState("");
+  const [factCheckResults, setFactCheckResults] = useState(null);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -166,6 +169,20 @@ Return ONLY the rewritten HTML content with mandatory blank lines after each par
     handleInputChange("body", augmentedContent);
     setShowAugmentDialog(false);
     setAugmentedContent("");
+  };
+
+  const handleFactCheckRegenerate = (correctedContent, factCheckData) => {
+    setFactCheckCorrectedContent(correctedContent);
+    setFactCheckResults(factCheckData);
+    setShowFactCheckCorrectionDialog(true);
+  };
+
+  const handleAcceptFactCheckCorrection = () => {
+    handleInputChange("body", factCheckCorrectedContent);
+    setShowFactCheckCorrectionDialog(false);
+    setShowFactCheck(false);
+    setFactCheckCorrectedContent("");
+    setFactCheckResults(null);
   };
 
   const handleSaveDraft = async () => {
@@ -513,7 +530,10 @@ Be thorough but fair. News articles can be critical but must be factual and prof
                 </Button>
               </div>
               {showFactCheck && (
-                <FactCheckPanel article={{ ...formData, id: article?.id }} />
+                <FactCheckPanel 
+                  article={{ ...formData, id: article?.id }} 
+                  onRegenerateRequest={handleFactCheckRegenerate}
+                />
               )}
             </div>
           )}
@@ -656,6 +676,74 @@ Be thorough but fair. News articles can be critical but must be factual and prof
             >
               <Wand2 className="w-4 h-4" />
               Use Enhanced Version
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Fact-Check Correction Dialog */}
+      <Dialog open={showFactCheckCorrectionDialog} onOpenChange={setShowFactCheckCorrectionDialog}>
+        <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-800">
+          <DialogHeader className="border-b border-gray-200 dark:border-gray-800 pb-4">
+            <DialogTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+              <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              Fact-Check Corrected Content
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              Review the AI-corrected version based on fact-check findings
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="overflow-y-auto max-h-[calc(85vh-180px)] py-4">
+            <div className="space-y-4">
+              <div className="bg-amber-50 dark:bg-amber-950/50 p-4 rounded-lg border-2 border-amber-200 dark:border-amber-800">
+                <p className="text-sm text-amber-900 dark:text-amber-100 font-medium">
+                  <strong>Corrections Applied:</strong> The AI has corrected factual inaccuracies found during fact-checking 
+                  while maintaining your article's voice and structure. Review carefully before accepting.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg border-2 border-gray-200 dark:border-gray-800 overflow-hidden">
+                  <div className="bg-gray-200 dark:bg-gray-800 px-4 py-2 border-b-2 border-gray-300 dark:border-gray-700">
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">Original Content</h4>
+                  </div>
+                  <div 
+                    className="p-4 max-h-96 overflow-y-auto text-gray-800 dark:text-gray-300 prose prose-sm dark:prose-invert"
+                    dangerouslySetInnerHTML={{ __html: formData.body }}
+                  />
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg border-2 border-blue-300 dark:border-blue-800 overflow-hidden">
+                  <div className="bg-blue-200 dark:bg-blue-900 px-4 py-2 border-b-2 border-blue-300 dark:border-blue-700">
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      Corrected Content
+                    </h4>
+                  </div>
+                  <div 
+                    className="p-4 max-h-96 overflow-y-auto text-gray-800 dark:text-gray-300 prose prose-sm dark:prose-invert"
+                    dangerouslySetInnerHTML={{ __html: factCheckCorrectedContent }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
+            <Button
+              variant="outline"
+              onClick={() => setShowFactCheckCorrectionDialog(false)}
+              className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              Keep Original
+            </Button>
+            <Button
+              onClick={handleAcceptFactCheckCorrection}
+              className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+            >
+              <Shield className="w-4 h-4" />
+              Use Corrected Version
             </Button>
           </div>
         </DialogContent>

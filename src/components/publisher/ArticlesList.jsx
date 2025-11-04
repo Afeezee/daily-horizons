@@ -17,6 +17,14 @@ import FactCheckPanel from "../articles/FactCheckPanel";
 export default function ArticlesList({ articles, onEdit, onDelete, isLoading, isDeleting = false, isPending = false }) {
   const [factCheckArticle, setFactCheckArticle] = useState(null);
 
+  const handleFactCheckRegenerate = (correctedContent, factCheckData) => {
+    // When fact-check correction is available from the dashboard view
+    // Open the article in editor with the corrected content
+    const articleToEdit = { ...factCheckArticle, body: correctedContent };
+    setFactCheckArticle(null);
+    onEdit(articleToEdit);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -148,12 +156,17 @@ export default function ArticlesList({ articles, onEdit, onDelete, isLoading, is
 
       {/* Fact Check Dialog */}
       <Dialog open={!!factCheckArticle} onOpenChange={() => setFactCheckArticle(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-800">
           <DialogHeader>
-            <DialogTitle>Fact Check: {factCheckArticle?.title}</DialogTitle>
+            <DialogTitle className="text-gray-900 dark:text-gray-100">
+              Fact Check: {factCheckArticle?.title}
+            </DialogTitle>
           </DialogHeader>
           {factCheckArticle && (
-            <FactCheckPanel article={factCheckArticle} />
+            <FactCheckPanel 
+              article={factCheckArticle} 
+              onRegenerateRequest={handleFactCheckRegenerate}
+            />
           )}
         </DialogContent>
       </Dialog>
