@@ -22,19 +22,29 @@ export default function CommentSection({ articleId, article, user }) {
     mutationFn: async ({ content, parent_comment_id }) => {
       if (!user) {
         base44.auth.redirectToLogin(window.location.pathname + window.location.search);
-        return;
+        throw new Error("Not authenticated");
       }
       const isAuthorReply = user?.email === article.created_by;
-      await base44.entities.Comment.create({
+      
+      // Create the comment
+      const newCommentData = await base44.entities.Comment.create({
         article_id: articleId,
         content,
         parent_comment_id,
         author_name: user.display_name || user.full_name,
         is_author_reply: isAuthorReply,
       });
-      await base44.entities.Article.update(articleId, {
-        comments_count: (article.comments_count || 0) + 1
-      });
+
+      // Try to update comment count, but don't fail if it doesn't work
+      try {
+        await base44.entities.Article.update(articleId, {
+          comments_count: (article.comments_count || 0) + 1
+        });
+      } catch (error) {
+        console.log("Could not update comment count (permission denied)");
+      }
+
+      return newCommentData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
@@ -42,6 +52,12 @@ export default function CommentSection({ articleId, article, user }) {
       setNewComment("");
       setReplyText("");
       setReplyTo(null);
+    },
+    onError: (error) => {
+      console.error("Error posting comment:", error);
+      if (error.message !== "Not authenticated") {
+        alert("Failed to post comment. Please try again.");
+      }
     },
   });
 
@@ -88,7 +104,7 @@ export default function CommentSection({ articleId, article, user }) {
             className="gap-2"
           >
             <Send className="w-4 h-4" />
-            Post Comment
+            {postCommentMutation.isPending ? "Posting..." : "Post Comment"}
           </Button>
         </div>
       ) : (
@@ -164,7 +180,7 @@ export default function CommentSection({ articleId, article, user }) {
                       onClick={() => handlePostReply(comment.id)}
                       disabled={!replyText.trim() || postCommentMutation.isPending}
                     >
-                      Post Reply
+                      {postCommentMutation.isPending ? "Posting..." : "Post Reply"}
                     </Button>
                     <Button
                       size="sm"
