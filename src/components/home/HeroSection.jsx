@@ -64,10 +64,14 @@ export default function HeroSection({ articles, isLoading }) {
                   </p>
                 )}
                 <div className="flex items-center gap-4 text-sm text-gray-300">
-                  <div className="flex items-center gap-1">
+                  <Link 
+                    to={createPageUrl("Author") + `?email=${encodeURIComponent(mainArticle.created_by)}&name=${encodeURIComponent(mainArticle.author_name || mainArticle.created_by)}`}
+                    className="flex items-center gap-1 hover:text-white transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <User className="w-4 h-4" />
                     <span>{mainArticle.author_name || mainArticle.created_by}</span>
-                  </div>
+                  </Link>
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     <span>{format(new Date(mainArticle.published_date), "MMM d, yyyy")}</span>
@@ -105,7 +109,13 @@ export default function HeroSection({ articles, isLoading }) {
                       {article.title}
                     </h3>
                     <div className="flex items-center gap-3 text-xs text-[var(--muted-foreground)]">
-                      <span>{article.author_name || article.created_by}</span>
+                      <Link 
+                        to={createPageUrl("Author") + `?email=${encodeURIComponent(article.created_by)}&name=${encodeURIComponent(article.author_name || article.created_by)}`}
+                        className="hover:text-[var(--accent)] transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {article.author_name || article.created_by}
+                      </Link>
                       <span>•</span>
                       <span>{format(new Date(article.published_date), "MMM d")}</span>
                     </div>

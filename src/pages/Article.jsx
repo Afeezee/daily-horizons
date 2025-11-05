@@ -181,12 +181,15 @@ export default function Article() {
           </p>
         )}
 
-        {/* Article Meta */}
+        {/* Article Meta - Updated with clickable author */}
         <div className="flex flex-wrap items-center gap-4 pb-6 mb-6 border-b border-[var(--border)]">
-          <div className="flex items-center gap-2">
+          <Link 
+            to={createPageUrl("Author") + `?email=${encodeURIComponent(article.created_by)}&name=${encodeURIComponent(article.author_name || article.created_by)}`}
+            className="flex items-center gap-2 hover:text-[var(--accent)] transition-colors"
+          >
             <User className="w-5 h-5 text-[var(--muted-foreground)]" />
             <span className="font-semibold">{article.author_name || article.created_by}</span>
-          </div>
+          </Link>
           <span className="text-[var(--muted-foreground)]">•</span>
           <div className="flex items-center gap-2 text-[var(--muted-foreground)]">
             <Clock className="w-4 h-4" />

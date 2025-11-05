@@ -6,6 +6,7 @@ import Category from './pages/Category';
 import Search from './pages/Search';
 import MyAccount from './pages/MyAccount';
 import About from './pages/About';
+import Author from './pages/Author';
 import Layout from './Layout.jsx';
 
 
@@ -18,6 +19,7 @@ export const PAGES = {
     "Search": Search,
     "MyAccount": MyAccount,
     "About": About,
+    "Author": Author,
 }
 
 export const pagesConfig = {

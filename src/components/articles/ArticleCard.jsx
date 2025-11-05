@@ -44,10 +44,14 @@ export default function ArticleCard({ article, compact = false, showViews = fals
         )}
 
         <div className={`flex items-center gap-3 text-xs text-[var(--muted-foreground)] ${compact ? 'flex-wrap' : ''}`}>
-          <div className="flex items-center gap-1">
+          <Link 
+            to={createPageUrl("Author") + `?email=${encodeURIComponent(article.created_by)}&name=${encodeURIComponent(article.author_name || article.created_by)}`}
+            className="flex items-center gap-1 hover:text-[var(--accent)] transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
             <User className="w-3 h-3" />
             <span className="truncate">{article.author_name || article.created_by}</span>
-          </div>
+          </Link>
           <span>•</span>
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
