@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
   Clock, User, Eye, Heart, Bookmark, Share2, MessageSquare, Shield,
-  Twitter, Facebook, Linkedin, Copy, CheckCircle
+  Twitter, Facebook, Linkedin, Copy, CheckCircle, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +16,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog";
 import CommentSection from "../components/articles/CommentSection";
 import ShareMenu from "../components/articles/ShareMenu";
@@ -335,9 +336,13 @@ export default function Article() {
 
       {/* Fact Check Dialog */}
       <Dialog open={showFactCheck} onOpenChange={setShowFactCheck}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-800">
+          <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-gray-100 data-[state=open]:text-gray-500 dark:ring-offset-gray-950 dark:focus:ring-gray-300 dark:data-[state=open]:bg-gray-800 dark:data-[state=open]:text-gray-400 bg-white dark:bg-gray-800 p-2 z-50">
+            <X className="h-4 w-4 text-gray-900 dark:text-gray-100" />
+            <span className="sr-only">Close</span>
+          </DialogClose>
           <DialogHeader>
-            <DialogTitle>Fact Check: {article.title}</DialogTitle>
+            <DialogTitle className="text-gray-900 dark:text-gray-100">Fact Check: {article.title}</DialogTitle>
           </DialogHeader>
           <FactCheckPanel article={article} />
         </DialogContent>
