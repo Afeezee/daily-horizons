@@ -1,8 +1,7 @@
-
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Newspaper, Users, Globe, Sparkles, PenSquare, Mail } from "lucide-react";
+import { Newspaper, Users, Globe, Sparkles, PenSquare, Mail, Shield, Rss } from "lucide-react";
 
 export default function About() {
   const scrollToContact = (e) => {
@@ -79,6 +78,50 @@ export default function About() {
                 Our Daily Digest and personalized features put you in control of your news 
                 consumption experience.
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Unique Features */}
+        <section>
+          <h2 className="text-3xl font-bold mb-8">What Makes Us Different</h2>
+          <div className="space-y-6">
+            <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-2 border-blue-300 dark:border-blue-800 rounded-lg">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100">
+                    AI-Powered Fact Checking
+                  </h3>
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    Every article on Daily Horizons can be fact-checked with our advanced AI system. 
+                    With one click, our AI searches credible sources across the web to verify claims, 
+                    providing detailed analysis with evidence and source links. This ensures transparency 
+                    and helps readers make informed decisions based on verified information.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-2 border-purple-300 dark:border-purple-800 rounded-lg">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-purple-600 dark:bg-purple-500 flex items-center justify-center flex-shrink-0">
+                  <Rss className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100">
+                    Personalized Daily Digest
+                  </h3>
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    Stay informed without the overwhelm. Our Daily Digest curates the most important 
+                    stories based on your preferences, delivering them right to your inbox. Choose your 
+                    categories, set your schedule, and receive a beautifully formatted email digest with 
+                    articles that matter to you—all powered by intelligent curation algorithms.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
