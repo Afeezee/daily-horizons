@@ -7,7 +7,7 @@ import Search from './pages/Search';
 import MyAccount from './pages/MyAccount';
 import About from './pages/About';
 import Author from './pages/Author';
-import Layout from './Layout.jsx';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -25,5 +25,5 @@ export const PAGES = {
 export const pagesConfig = {
     mainPage: "Home",
     Pages: PAGES,
-    Layout: Layout,
+    Layout: __Layout,
 };
