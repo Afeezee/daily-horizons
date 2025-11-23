@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -136,7 +135,7 @@ export default function ArticleEditor({ article, user, onClose }) {
     setIsAugmenting(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a professional editor and journalist. Rewrite and enhance the following article to make it more engaging, well-structured, and professionally written.
+        prompt: `You are a professional editor and journalist. Rewrite and enhance the following article to make it more engaging, well-structured, and professionally written while ensuring it meets publication standards.
 
 Article Details:
 - Title: ${formData.title}
@@ -144,8 +143,8 @@ Article Details:
 - Labels: ${formData.labels.join(", ")}
 - Current Content: ${formData.body.replace(/<[^>]*>/g, ' ')}
 
-Guidelines:
-1. Maintain the core facts and message
+CONTENT GUIDELINES:
+1. Maintain the core facts and message - do not alter factual claims
 2. Improve clarity, flow, and readability
 3. Use appropriate tone for ${formData.category} journalism
 4. Add engaging transitions between paragraphs
@@ -155,6 +154,13 @@ Guidelines:
 8. CRITICAL SPACING REQUIREMENT: After EVERY closing </p> tag, you MUST add an empty paragraph <p></p> or a <br> tag for visual spacing
 9. Example of correct format: <p>First paragraph content here.</p><p></p><p>Second paragraph content here.</p><p></p><p>Third paragraph...</p>
 10. This blank line spacing is MANDATORY after each and every paragraph without exception
+
+MODERATION COMPLIANCE:
+- Ensure the rewritten content will pass moderation by being factual, professional, and well-sourced
+- Maintain journalistic integrity - keep critical perspectives but ensure they are backed by facts
+- Avoid sensationalism or inflammatory language while keeping the content engaging
+- For sensitive topics (politics, national security, etc.), use neutral, professional language that presents facts clearly
+- Ensure claims are presented with appropriate context and attribution
 
 Return ONLY the rewritten HTML content with mandatory blank lines after each paragraph.`,
         response_json_schema: {
@@ -243,21 +249,29 @@ Return ONLY the rewritten HTML content with mandatory blank lines after each par
       }
 
       const moderationResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a content moderator for a news platform. Analyze the following article for:
+        prompt: `You are a content moderator for a news platform that values freedom of speech and accurate journalism. Analyze the following article for:
 1. Derogatory language or character assassination
-2. Factual accuracy and credibility
-3. Writing quality
-4. Misinformation or propaganda
+2. Factual accuracy and credibility (require verifiable sources for major claims)
+3. Writing quality and professionalism
+4. Clear misinformation or propaganda (be careful not to confuse critical journalism with propaganda)
 
 Article Title: ${formData.title}
+Article Category: ${formData.category}
 Article Body: ${formData.body.substring(0, 3000)}
 
+IMPORTANT MODERATION GUIDELINES:
+- Freedom of speech: Allow critical reporting on sensitive topics including national security, government actions, and public policy, as long as facts are verifiable
+- National security articles: Do not reject articles discussing security issues unless they contain clear misinformation, incitement to violence, or unsubstantiated conspiracy theories
+- Political criticism: Distinguish between legitimate investigative journalism/opinion and propaganda
+- Factual verification: Focus on whether major claims can be verified, not whether the perspective is critical
+- Allow diverse viewpoints: Articles can challenge official narratives if they present credible evidence or expert analysis
+
 Return a JSON with:
-- approved (boolean): true if the article meets standards
+- approved (boolean): true if the article meets standards (lean towards approval for factual, professional content)
 - issues (array of strings): list of specific issues found
 - recommendation (string): brief recommendation
 
-Be thorough but fair. News articles can be critical but must be factual and professional.`,
+Be thorough but fair. Approve articles that are factual and professional, even if they are critical or discuss sensitive topics.`,
         response_json_schema: {
           type: "object",
           properties: {
