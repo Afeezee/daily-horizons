@@ -539,7 +539,7 @@ Be thorough but fair. Approve articles that are factual and professional, even i
             <div>
               <h3 className="font-semibold mb-2">Author Bio & Contact</h3>
               <p className="text-sm text-[var(--muted-foreground)] mb-4">
-                This information will appear at the end of your published articles for readers to learn more about you and contact you.
+                This information will appear at the end of your published articles. You can edit it here before publishing, or update your default profile in My Account settings.
               </p>
             </div>
             <div>
