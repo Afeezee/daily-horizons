@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -79,6 +78,15 @@ export default function Article() {
     queryFn: () => base44.entities.ArticleLike.filter({ article_id: articleId, created_by: user.email }),
     enabled: !!user && !!articleId && authChecked,
     initialData: [],
+  });
+
+  const { data: authorProfile } = useQuery({
+    queryKey: ['authorProfile', article?.created_by],
+    queryFn: async () => {
+      const users = await base44.entities.User.filter({ email: article.created_by });
+      return users.length > 0 ? users[0] : null;
+    },
+    enabled: !!article?.created_by,
   });
 
   const isSaved = savedArticles.some(s => s.article_id === articleId);
@@ -303,6 +311,47 @@ export default function Article() {
                 #{tag}
               </Link>
             ))}
+          </div>
+        )}
+
+        {/* Author Bio Section */}
+        {authorProfile && (authorProfile.bio || authorProfile.contact_email || authorProfile.contact_phone) && (
+          <div className="my-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 rounded-lg border-2 border-[var(--border)]">
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-full bg-[var(--primary)] text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                {(article.author_name || article.created_by)?.[0]?.toUpperCase()}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold mb-2">About the Author</h3>
+                <p className="font-semibold text-lg mb-2">{article.author_name || article.created_by}</p>
+                {authorProfile.bio && (
+                  <p className="text-[var(--muted-foreground)] mb-3 leading-relaxed">
+                    {authorProfile.bio}
+                  </p>
+                )}
+                {(authorProfile.contact_email || authorProfile.contact_phone) && (
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold">Contact:</p>
+                    {authorProfile.contact_email && (
+                      <p className="text-sm">
+                        <span className="text-[var(--muted-foreground)]">Email:</span>{" "}
+                        <a href={`mailto:${authorProfile.contact_email}`} className="text-[var(--accent)] hover:underline">
+                          {authorProfile.contact_email}
+                        </a>
+                      </p>
+                    )}
+                    {authorProfile.contact_phone && (
+                      <p className="text-sm">
+                        <span className="text-[var(--muted-foreground)]">Phone:</span>{" "}
+                        <a href={`tel:${authorProfile.contact_phone}`} className="text-[var(--accent)] hover:underline">
+                          {authorProfile.contact_phone}
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
