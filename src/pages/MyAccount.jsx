@@ -1,38 +1,22 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, Bookmark, Settings, LogOut, Mail, Phone, FileText } from "lucide-react";
+import { User, Bookmark, Settings, LogOut } from "lucide-react";
 import ArticleCard from "../components/articles/ArticleCard";
 
 export default function MyAccount() {
   const [user, setUser] = useState(null);
-  const [profileData, setProfileData] = useState({
-    display_name: "",
-    bio: "",
-    contact_email: "",
-    contact_phone: "",
-  });
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
-        setProfileData({
-          display_name: currentUser.display_name || "",
-          bio: currentUser.bio || "",
-          contact_email: currentUser.contact_email || "",
-          contact_phone: currentUser.contact_phone || "",
-        });
       } catch (error) {
         base44.auth.redirectToLogin();
       }
@@ -64,22 +48,6 @@ export default function MyAccount() {
     },
     enabled: !!user,
   });
-
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data) => {
-      await base44.auth.updateMe(data);
-    },
-    onSuccess: async () => {
-      const updatedUser = await base44.auth.me();
-      setUser(updatedUser);
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-    },
-  });
-
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    await updateProfileMutation.mutateAsync(profileData);
-  };
 
   const handleLogout = () => {
     base44.auth.logout();
@@ -113,12 +81,8 @@ export default function MyAccount() {
           </Button>
         </div>
 
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full md:w-auto grid-cols-3 bg-[var(--muted)]">
-            <TabsTrigger value="profile" className="gap-2">
-              <User className="w-4 h-4" />
-              Profile
-            </TabsTrigger>
+        <Tabs defaultValue="saved" className="space-y-6">
+          <TabsList className="grid w-full md:w-auto grid-cols-2 bg-[var(--muted)]">
             <TabsTrigger value="saved" className="gap-2">
               <Bookmark className="w-4 h-4" />
               Saved Articles
@@ -128,90 +92,6 @@ export default function MyAccount() {
               Settings
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Author Profile</CardTitle>
-                <CardDescription>
-                  This information will automatically appear in your articles and can be edited before publishing
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleProfileUpdate} className="space-y-6">
-                  <div>
-                    <Label htmlFor="display_name">Display Name</Label>
-                    <Input
-                      id="display_name"
-                      value={profileData.display_name}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, display_name: e.target.value }))}
-                      placeholder="Your public name"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="bio" className="flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      Author Biography
-                    </Label>
-                    <Textarea
-                      id="bio"
-                      value={profileData.bio}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                      placeholder="Write a brief bio about yourself (will be displayed with your articles)"
-                      rows={5}
-                      className="mt-2"
-                    />
-                    <p className="text-xs text-[var(--muted-foreground)] mt-1">
-                      This bio will appear at the end of your published articles
-                    </p>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="contact_email" className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        Contact Email
-                      </Label>
-                      <Input
-                        id="contact_email"
-                        type="email"
-                        value={profileData.contact_email}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, contact_email: e.target.value }))}
-                        placeholder="your@email.com"
-                        className="mt-2"
-                      />
-                      <p className="text-xs text-[var(--muted-foreground)] mt-1">
-                        Readers can contact you via this email
-                      </p>
-                    </div>
-                    <div>
-                      <Label htmlFor="contact_phone" className="flex items-center gap-2">
-                        <Phone className="w-4 h-4" />
-                        Contact Phone (optional)
-                      </Label>
-                      <Input
-                        id="contact_phone"
-                        type="tel"
-                        value={profileData.contact_phone}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, contact_phone: e.target.value }))}
-                        placeholder="+234 XXX XXX XXXX"
-                        className="mt-2"
-                      />
-                    </div>
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    disabled={updateProfileMutation.isPending}
-                    className="w-full md:w-auto"
-                  >
-                    {updateProfileMutation.isPending ? "Saving..." : "Save Profile"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="saved">
             <Card>
