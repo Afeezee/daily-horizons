@@ -17,6 +17,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import FactCheckPanel from "../articles/FactCheckPanel";
+import AuthorBioCard from "./AuthorBioCard";
 
 const categories = ["News", "Opinion", "Culture", "Lifestyle", "Sport", "Education", "Technology"];
 
