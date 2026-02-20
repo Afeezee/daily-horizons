@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,6 +21,7 @@ import CommentSection from "../components/articles/CommentSection";
 import ShareMenu from "../components/articles/ShareMenu";
 import RelatedArticles from "../components/articles/RelatedArticles";
 import FactCheckPanel from "../components/articles/FactCheckPanel";
+import AuthorBioCard from "../components/publisher/AuthorBioCard";
 
 export default function Article() {
   const urlParams = new URLSearchParams(window.location.search);
