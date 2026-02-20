@@ -315,6 +315,18 @@ export default function Article() {
           </div>
         )}
 
+        {/* Author Bio */}
+        {authorProfile && authorProfile.bio && (
+          <div className="mb-12">
+            <h3 className="text-lg font-bold mb-3">About the Author</h3>
+            <AuthorBioCard
+              profile={authorProfile}
+              authorName={article.author_name || article.created_by}
+              authorEmail={article.created_by}
+            />
+          </div>
+        )}
+
         {/* Sign-in CTA for engagement */}
         {!user && authChecked && (
           <div className="my-12 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-[var(--border)]">
