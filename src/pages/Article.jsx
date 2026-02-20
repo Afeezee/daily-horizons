@@ -106,24 +106,7 @@ export default function Article() {
         await base44.entities.SavedArticle.create({ article_id: articleId });
       }
     },
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ['savedArticles', user?.email] });
-      const prev = queryClient.getQueryData(['savedArticles', user?.email]);
-      if (isSaved) {
-        queryClient.setQueryData(['savedArticles', user?.email], (old) =>
-          (old || []).filter(s => s.article_id !== articleId)
-        );
-      } else {
-        queryClient.setQueryData(['savedArticles', user?.email], (old) =>
-          [...(old || []), { article_id: articleId, id: 'temp_' + Date.now(), created_by: user?.email }]
-        );
-      }
-      return { prev };
-    },
-    onError: (_err, _vars, context) => {
-      queryClient.setQueryData(['savedArticles', user?.email], context?.prev);
-    },
-    onSettled: () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
     },
   });
@@ -146,29 +129,7 @@ export default function Article() {
         });
       }
     },
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ['article', articleId] });
-      await queryClient.cancelQueries({ queryKey: ['articleLike', articleId, user?.email] });
-      const prevArticle = queryClient.getQueryData(['article', articleId]);
-      const prevLike = queryClient.getQueryData(['articleLike', articleId, user?.email]);
-      if (isLiked) {
-        queryClient.setQueryData(['articleLike', articleId, user?.email], []);
-        queryClient.setQueryData(['article', articleId], (old) =>
-          old ? { ...old, likes_count: Math.max(0, (old.likes_count || 0) - 1) } : old
-        );
-      } else {
-        queryClient.setQueryData(['articleLike', articleId, user?.email], [{ id: 'temp', article_id: articleId }]);
-        queryClient.setQueryData(['article', articleId], (old) =>
-          old ? { ...old, likes_count: (old.likes_count || 0) + 1 } : old
-        );
-      }
-      return { prevArticle, prevLike };
-    },
-    onError: (_err, _vars, context) => {
-      queryClient.setQueryData(['article', articleId], context?.prevArticle);
-      queryClient.setQueryData(['articleLike', articleId, user?.email], context?.prevLike);
-    },
-    onSettled: () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['article', articleId] });
       queryClient.invalidateQueries({ queryKey: ['articleLike'] });
     },

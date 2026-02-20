@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useState, useEffect } from "react";
@@ -5,7 +6,7 @@ import { base44 } from "@/api/base44Client";
 import { 
   Search, Moon, Sun, User, PenSquare, Menu, X,
   ChevronDown, Newspaper, MessageSquare, Palette, Heart,
-  Trophy, GraduationCap, Cpu, Home, Rss
+  Trophy, GraduationCap, Cpu, BookOpen, Home, Rss
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,10 +16,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import AIChatAssistant from "@/components/assistant/AIChatAssistant";
-import MobileBottomTabs from "@/components/mobile/MobileBottomTabs";
-import MobileTopBar from "@/components/mobile/MobileTopBar";
-import PageTransition from "@/components/mobile/PageTransition";
 
 const categories = [
   { name: "News", icon: Newspaper, subcategories: ["Breaking", "Politics", "World", "Business"] },
@@ -33,12 +30,7 @@ const categories = [
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const [user, setUser] = useState(null);
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      return "dark";
-    }
-    return "light";
-  });
+  const [theme, setTheme] = useState("light");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
@@ -50,27 +42,13 @@ export default function Layout({ children, currentPageName }) {
       try {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
-        if (currentUser.preferences?.theme) {
-          setTheme(currentUser.preferences.theme);
-        }
+        setTheme(currentUser.preferences?.theme || "light");
       } catch (error) {
         setUser(null);
       }
     };
     checkAuth();
   }, []);
-
-  // Sync with system dark mode
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = (e) => {
-      if (!user?.preferences?.theme) {
-        setTheme(e.matches ? "dark" : "light");
-      }
-    };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -133,47 +111,32 @@ export default function Layout({ children, currentPageName }) {
         body {
           background: var(--background);
           color: var(--foreground);
-          overscroll-behavior: none;
-          -webkit-overflow-scrolling: touch;
-        }
-
-        button, a, nav, [role="menuitem"], [role="tab"] {
-          -webkit-user-select: none;
-          user-select: none;
-        }
-
-        @supports (padding-top: env(safe-area-inset-top)) {
-          .safe-top { padding-top: env(safe-area-inset-top); }
-          .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         }
       `}</style>
 
       <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300">
-        {/* Mobile Top Bar for child pages */}
-        <MobileTopBar currentPageName={currentPageName} />
-
         {/* Top Bar */}
-        <div className="border-b border-[var(--border)] bg-[var(--card)] safe-top">
+        <div className="border-b border-[var(--border)] bg-[var(--card)]">
           <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between text-sm">
             <div className="flex items-center gap-4">
-              <span className="text-[var(--muted-foreground)] hidden sm:inline">
+              <span className="text-[var(--muted-foreground)]">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={toggleTheme} className="h-8 select-none">
+              <Button variant="ghost" size="sm" onClick={toggleTheme} className="h-8">
                 {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
               </Button>
               {user ? (
                 <>
                   <Link to={createPageUrl("PublisherDashboard")}>
-                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 select-none">
+                    <Button variant="ghost" size="sm" className="h-8 gap-1.5">
                       <PenSquare className="w-4 h-4" />
                       <span className="hidden md:inline">Publish</span>
                     </Button>
                   </Link>
-                  <Link to={createPageUrl("MyAccount")} className="hidden md:inline-flex">
-                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 select-none">
+                  <Link to={createPageUrl("MyAccount")}>
+                    <Button variant="ghost" size="sm" className="h-8 gap-1.5">
                       <User className="w-4 h-4" />
                       <span className="hidden md:inline">{user.display_name || user.full_name}</span>
                     </Button>
@@ -183,7 +146,7 @@ export default function Layout({ children, currentPageName }) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 select-none"
+                  className="h-8"
                   onClick={() => base44.auth.redirectToLogin()}
                 >
                   Sign in
@@ -199,16 +162,16 @@ export default function Layout({ children, currentPageName }) {
         }`}>
           <div className="max-w-7xl mx-auto px-4">
             {/* Logo and Search */}
-            <div className="py-3 md:py-4 flex items-center justify-between gap-4">
+            <div className="py-4 flex items-center justify-between gap-4">
               <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <div className="w-9 h-9 md:w-10 md:h-10 bg-[var(--primary)] rounded flex items-center justify-center overflow-hidden">
+                <div className="w-10 h-10 bg-[var(--primary)] rounded flex items-center justify-center overflow-hidden">
                   <img src={logoUrl} alt="Daily Horizons Logo" className="w-full h-full object-contain" onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8z"></path></svg>';
+                    e.target.style.display = 'none'; // Hide the broken image
+                    e.target.parentElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8z"></path></svg>'; // Replace with Newspaper icon SVG
                   }} />
                 </div>
                 <div>
-                  <h1 className="text-xl md:text-2xl font-bold tracking-tight">Daily Horizons</h1>
+                  <h1 className="text-2xl font-bold tracking-tight">Daily Horizons</h1>
                   <p className="text-xs text-[var(--muted-foreground)] hidden sm:block">Empowering News and Insights</p>
                 </div>
               </Link>
@@ -226,27 +189,20 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               </form>
 
-              <div className="flex items-center gap-2 md:hidden">
-                <Link to={createPageUrl("Search")}>
-                  <Button variant="ghost" size="icon" className="select-none">
-                    <Search className="w-5 h-5" />
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="select-none"
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                >
-                  {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
             </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex flex-wrap items-center gap-1 border-t border-[var(--border)] py-1">
               <Link to={createPageUrl("Home")}>
-                <Button variant="ghost" size="sm" className="font-medium select-none">
+                <Button variant="ghost" size="sm" className="font-medium">
                   <Home className="w-4 h-4 mr-1.5" />
                   Home
                 </Button>
@@ -255,7 +211,7 @@ export default function Layout({ children, currentPageName }) {
               {categories.map((category) => (
                 <DropdownMenu key={category.name}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="font-medium gap-1 select-none">
+                    <Button variant="ghost" size="sm" className="font-medium gap-1">
                       <category.icon className="w-4 h-4" />
                       {category.name}
                       <ChevronDown className="w-3 h-3" />
@@ -279,14 +235,14 @@ export default function Layout({ children, currentPageName }) {
               ))}
 
               <Link to={createPageUrl("DailyDigest")}>
-                <Button variant="ghost" size="sm" className="font-medium text-[var(--accent)] select-none">
+                <Button variant="ghost" size="sm" className="font-medium text-[var(--accent)]">
                   <Rss className="w-4 h-4 mr-1.5" />
                   Today's Digest
                 </Button>
               </Link>
 
               <Link to={createPageUrl("About")}>
-                <Button variant="ghost" size="sm" className="font-medium select-none">
+                <Button variant="ghost" size="sm" className="font-medium">
                   About
                 </Button>
               </Link>
@@ -310,18 +266,34 @@ export default function Layout({ children, currentPageName }) {
               </div>
             </form>
 
-            <div className="space-y-1">
+            <div className="space-y-2">
+              <Link to={createPageUrl("Home")} onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start">
+                  <Home className="w-4 h-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
+
               {categories.map((category) => (
-                <Link key={category.name} to={createPageUrl("Category") + `?name=${category.name}`} onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="ghost" className="w-full justify-start select-none">
-                    <category.icon className="w-4 h-4 mr-2" />
-                    {category.name}
-                  </Button>
-                </Link>
+                <div key={category.name}>
+                  <Link to={createPageUrl("Category") + `?name=${category.name}`} onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start">
+                      <category.icon className="w-4 h-4 mr-2" />
+                      {category.name}
+                    </Button>
+                  </Link>
+                </div>
               ))}
 
+              <Link to={createPageUrl("DailyDigest")} onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start text-[var(--accent)]">
+                  <Rss className="w-4 h-4 mr-2" />
+                  Today's Digest
+                </Button>
+              </Link>
+
               <Link to={createPageUrl("About")} onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start select-none">
+                <Button variant="ghost" className="w-full justify-start">
                   About
                 </Button>
               </Link>
@@ -329,21 +301,13 @@ export default function Layout({ children, currentPageName }) {
           </div>
         )}
 
-        {/* Main Content — with bottom padding for mobile tab bar */}
-        <main className="min-h-[calc(100vh-200px)] pb-16 md:pb-0">
-          <PageTransition pageKey={location.pathname + location.search}>
-            {children}
-          </PageTransition>
+        {/* Main Content */}
+        <main className="min-h-[calc(100vh-200px)]">
+          {children}
         </main>
 
-        {/* AI Chat Assistant */}
-        <AIChatAssistant />
-
-        {/* Mobile Bottom Tab Bar */}
-        <MobileBottomTabs currentPageName={currentPageName} />
-
-        {/* Footer — hidden on mobile for cleaner native feel, shown on desktop */}
-        <footer className="hidden md:block border-t border-[var(--border)] bg-[var(--card)] mt-16">
+        {/* Footer */}
+        <footer className="border-t border-[var(--border)] bg-[var(--card)] mt-16">
           <div className="max-w-7xl mx-auto px-4 py-12">
             <div className="grid md:grid-cols-4 gap-8">
               <div>
@@ -382,7 +346,7 @@ export default function Layout({ children, currentPageName }) {
                   Get the latest stories delivered to your inbox.
                 </p>
                 <Link to={createPageUrl("DailyDigest")}>
-                  <Button variant="default" size="sm" className="w-full select-none">
+                  <Button variant="default" size="sm" className="w-full">
                     Subscribe to Digest
                   </Button>
                 </Link>
