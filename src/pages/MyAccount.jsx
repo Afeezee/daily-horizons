@@ -256,6 +256,59 @@ export default function MyAccount() {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card className="border-red-200 dark:border-red-900">
+                <CardHeader>
+                  <CardTitle className="text-red-600">Danger Zone</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-[var(--muted-foreground)] mb-4">
+                    Permanently delete your account and all associated data. This action cannot be undone.
+                  </p>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="gap-2">
+                        <Trash2 className="w-4 h-4" />
+                        Delete Account
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete your account, all your published articles, saved items, comments, and preferences. This action cannot be reversed.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-600 hover:bg-red-700"
+                          onClick={async () => {
+                            // Delete publisher profile, articles, saved articles, likes, digest prefs
+                            const [profiles, articles, saved, likes, prefs] = await Promise.all([
+                              base44.entities.PublisherProfile.filter({ created_by: user.email }),
+                              base44.entities.Article.filter({ created_by: user.email }),
+                              base44.entities.SavedArticle.filter({ created_by: user.email }),
+                              base44.entities.ArticleLike.filter({ created_by: user.email }),
+                              base44.entities.DigestPreference.filter({ created_by: user.email }),
+                            ]);
+                            await Promise.all([
+                              ...profiles.map(p => base44.entities.PublisherProfile.delete(p.id)),
+                              ...articles.map(a => base44.entities.Article.delete(a.id)),
+                              ...saved.map(s => base44.entities.SavedArticle.delete(s.id)),
+                              ...likes.map(l => base44.entities.ArticleLike.delete(l.id)),
+                              ...prefs.map(p => base44.entities.DigestPreference.delete(p.id)),
+                            ]);
+                            base44.auth.logout();
+                          }}
+                        >
+                          Yes, Delete My Account
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>
