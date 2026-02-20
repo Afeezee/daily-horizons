@@ -20,6 +20,7 @@ export default function PublisherDashboard() {
   const [showEditor, setShowEditor] = useState(false);
   const [editingArticle, setEditingArticle] = useState(null);
   const [showTerms, setShowTerms] = useState(false);
+  const [showNewArticleTerms, setShowNewArticleTerms] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
