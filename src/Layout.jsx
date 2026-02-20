@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useState, useEffect } from "react";
@@ -16,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import AIChatAssistant from "@/components/assistant/AIChatAssistant";
 
 const categories = [
   { name: "News", icon: Newspaper, subcategories: ["Breaking", "Politics", "World", "Business"] },
