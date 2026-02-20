@@ -78,8 +78,7 @@ export default function PublisherDashboard() {
       setShowTerms(true);
       return;
     }
-    setEditingArticle(null);
-    setShowEditor(true);
+    setShowNewArticleTerms(true);
   };
 
   const handleEditArticle = (article) => {
