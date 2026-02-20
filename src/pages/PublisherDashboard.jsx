@@ -164,6 +164,16 @@ export default function PublisherDashboard() {
           totalComments={totalComments}
         />
 
+        {/* Author Bio Section */}
+        {publisherProfile && (
+          <div className="mt-8">
+            <BioEditor
+              profile={publisherProfile}
+              onSaved={() => queryClient.invalidateQueries({ queryKey: ['publisherProfile'] })}
+            />
+          </div>
+        )}
+
         {/* Articles Tabs */}
         <Tabs defaultValue="published" className="mt-8">
           <TabsList className="grid w-full md:w-auto grid-cols-3 bg-[var(--muted)]">
