@@ -306,6 +306,9 @@ export default function Layout({ children, currentPageName }) {
           {children}
         </main>
 
+        {/* AI Chat Assistant */}
+        <AIChatAssistant />
+
         {/* Footer */}
         <footer className="border-t border-[var(--border)] bg-[var(--card)] mt-16">
           <div className="max-w-7xl mx-auto px-4 py-12">
