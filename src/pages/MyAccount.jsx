@@ -41,6 +41,17 @@ export default function MyAccount() {
     initialData: [],
   });
 
+  const queryClient = useQueryClient();
+
+  const { data: publisherProfile } = useQuery({
+    queryKey: ['publisherProfile', user?.email],
+    queryFn: async () => {
+      const profiles = await base44.entities.PublisherProfile.filter({ created_by: user.email });
+      return profiles[0] || null;
+    },
+    enabled: !!user,
+  });
+
   const { data: digestPreferences } = useQuery({
     queryKey: ['digestPreferences', user?.email],
     queryFn: async () => {
