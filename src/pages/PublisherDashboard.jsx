@@ -224,6 +224,17 @@ export default function PublisherDashboard() {
         </Tabs>
       </div>
 
+      {showNewArticleTerms && (
+        <NewArticleTermsDialog
+          onAccept={() => {
+            setShowNewArticleTerms(false);
+            setEditingArticle(null);
+            setShowEditor(true);
+          }}
+          onDecline={() => setShowNewArticleTerms(false)}
+        />
+      )}
+
       {showTerms && (
         <TermsDialog
           onAccept={async () => {
