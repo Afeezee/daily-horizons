@@ -125,6 +125,7 @@ export default function PublisherDashboard() {
       <ArticleEditor
         article={editingArticle}
         user={user}
+        publisherProfile={publisherProfile}
         onClose={() => {
           setShowEditor(false);
           setEditingArticle(null);
