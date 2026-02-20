@@ -538,6 +538,21 @@ Be thorough but fair. Approve articles that are factual and professional, even i
             </div>
           </div>
 
+          {/* Author Bio Preview */}
+          {publisherProfile && publisherProfile.bio && (
+            <div>
+              <Label className="mb-2 block">Author Bio Preview (shown below your articles)</Label>
+              <AuthorBioCard 
+                profile={publisherProfile}
+                authorName={user.display_name || user.full_name}
+                authorEmail={user.email}
+              />
+              <p className="text-xs text-[var(--muted-foreground)] mt-2">
+                Edit your bio in your account settings or from the Publisher Dashboard.
+              </p>
+            </div>
+          )}
+
           {/* Fact Check Section */}
           {formData.title && formData.body && (
             <div>
