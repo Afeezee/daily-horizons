@@ -43,9 +43,6 @@ export default function ArticleEditor({ article, user, onClose }) {
     meta_title: article?.meta_title || "",
     meta_description: article?.meta_description || "",
     reading_time: article?.reading_time || 5,
-    author_bio: user?.bio || "",
-    author_contact_email: user?.contact_email || "",
-    author_contact_phone: user?.contact_phone || "",
   });
 
   const [isUploading, setIsUploading] = useState(false);
@@ -207,26 +204,12 @@ Return ONLY the rewritten HTML content with mandatory blank lines after each par
   const handleSaveDraft = async () => {
     setIsSaving(true);
     try {
-      // Update user bio/contact if changed
-      if (formData.author_bio !== user.bio || 
-          formData.author_contact_email !== user.contact_email || 
-          formData.author_contact_phone !== user.contact_phone) {
-        await base44.auth.updateMe({
-          bio: formData.author_bio,
-          contact_email: formData.author_contact_email,
-          contact_phone: formData.author_contact_phone,
-        });
-      }
-
       const articleData = {
         ...formData,
         tags: formData.tags.split(",").map(t => t.trim()).filter(Boolean),
         author_name: user.display_name || user.full_name,
         status: "draft",
       };
-      delete articleData.author_bio;
-      delete articleData.author_contact_email;
-      delete articleData.author_contact_phone;
 
       if (article) {
         await base44.entities.Article.update(article.id, articleData);
@@ -249,26 +232,12 @@ Return ONLY the rewritten HTML content with mandatory blank lines after each par
 
     setIsPublishing(true);
     try {
-      // Update user bio/contact if changed
-      if (formData.author_bio !== user.bio || 
-          formData.author_contact_email !== user.contact_email || 
-          formData.author_contact_phone !== user.contact_phone) {
-        await base44.auth.updateMe({
-          bio: formData.author_bio,
-          contact_email: formData.author_contact_email,
-          contact_phone: formData.author_contact_phone,
-        });
-      }
-
       const articleData = {
         ...formData,
         tags: formData.tags.split(",").map(t => t.trim()).filter(Boolean),
         author_name: user.display_name || user.full_name,
         status: "pending_moderation",
       };
-      delete articleData.author_bio;
-      delete articleData.author_contact_email;
-      delete articleData.author_contact_phone;
 
       let articleId = article?.id;
 
@@ -532,48 +501,6 @@ Be thorough but fair. Approve articles that are factual and professional, even i
               onChange={(e) => handleInputChange("tags", e.target.value)}
               placeholder="e.g., climate change, politics, technology"
             />
-          </div>
-
-          {/* Author Bio & Contact */}
-          <div className="space-y-4 p-4 border border-[var(--border)] rounded-lg bg-blue-50 dark:bg-blue-950/20">
-            <div>
-              <h3 className="font-semibold mb-2">Author Bio & Contact</h3>
-              <p className="text-sm text-[var(--muted-foreground)] mb-4">
-                This information will appear at the end of your published articles for readers to learn more about you and contact you.
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="author_bio">Author Biography</Label>
-              <Textarea
-                id="author_bio"
-                value={formData.author_bio}
-                onChange={(e) => handleInputChange("author_bio", e.target.value)}
-                placeholder="Write a brief bio about yourself (will be displayed with your articles)"
-                rows={4}
-              />
-            </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="contact_email">Contact Email</Label>
-                <Input
-                  id="contact_email"
-                  type="email"
-                  value={formData.author_contact_email}
-                  onChange={(e) => handleInputChange("author_contact_email", e.target.value)}
-                  placeholder="your@email.com"
-                />
-              </div>
-              <div>
-                <Label htmlFor="contact_phone">Contact Phone (optional)</Label>
-                <Input
-                  id="contact_phone"
-                  type="tel"
-                  value={formData.author_contact_phone}
-                  onChange={(e) => handleInputChange("author_contact_phone", e.target.value)}
-                  placeholder="+234 XXX XXX XXXX"
-                />
-              </div>
-            </div>
           </div>
 
           {/* SEO Fields */}

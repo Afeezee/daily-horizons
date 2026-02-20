@@ -48,32 +48,25 @@ export default function TermsDialog({ onAccept, onDecline }) {
             </section>
 
             <section>
-              <h3 className="font-semibold text-base mb-2">3. Copyright & Ownership</h3>
-              <p className="text-[var(--muted-foreground)] font-semibold mb-2">
-                YOU OWN THE COPYRIGHT TO YOUR WORK.
-              </p>
+              <h3 className="font-semibold text-base mb-2">3. Rights & Ownership</h3>
               <p className="text-[var(--muted-foreground)]">
-                By publishing on Daily Horizons, you retain full copyright and ownership of your articles.
-                You grant us a non-exclusive license to display, distribute, and promote your content on our platform.
-                You are free to republish your work elsewhere at any time. You confirm that you have the right to 
-                publish all content, including images and quotes.
+                By publishing on Daily Horizons, you grant us a non-exclusive license to display, distribute,
+                and promote your content. You retain full ownership and can republish elsewhere. You confirm
+                that you have the right to publish all content, including images and quotes.
               </p>
             </section>
 
             <section>
-              <h3 className="font-semibold text-base mb-2">4. Journalism Ethics & Code of Conduct</h3>
+              <h3 className="font-semibold text-base mb-2">4. Code of Conduct</h3>
               <p className="text-[var(--muted-foreground)]">
-                Publishers must adhere to professional journalism ethics and:
+                Publishers must:
               </p>
               <ul className="list-disc pl-6 mt-2 space-y-1 text-[var(--muted-foreground)]">
-                <li>Maintain truth, accuracy, and objectivity in reporting</li>
-                <li>Avoid using offensive, derogatory, or inflammatory language</li>
-                <li>Respect human dignity and avoid character assassination</li>
-                <li>Disclose conflicts of interest and maintain transparency</li>
-                <li>Verify facts and provide credible sources for claims</li>
+                <li>Maintain professional standards in all communications</li>
+                <li>Disclose conflicts of interest</li>
                 <li>Respect reader privacy and data protection laws</li>
                 <li>Respond constructively to feedback and criticism</li>
-                <li>Not engage in spam, manipulation, plagiarism, or fraudulent practices</li>
+                <li>Not engage in spam, manipulation, or fraudulent practices</li>
               </ul>
             </section>
 
