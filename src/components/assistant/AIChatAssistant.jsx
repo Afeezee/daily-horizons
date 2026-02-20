@@ -110,7 +110,7 @@ export default function AIChatAssistant() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-[360px] sm:w-[400px] h-[520px] bg-[var(--card)] border border-[var(--border)] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="fixed bottom-20 md:bottom-6 right-4 left-4 md:left-auto md:right-6 z-50 md:w-[400px] h-[70vh] md:h-[520px] bg-[var(--card)] border border-[var(--border)] rounded-2xl shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "calc(100vh - 140px)" }}>
           {/* Header */}
           <div className="bg-[var(--primary)] text-white px-4 py-3 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
