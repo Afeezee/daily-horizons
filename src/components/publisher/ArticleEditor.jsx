@@ -30,7 +30,7 @@ const subcategories = {
   Technology: ["AI", "Startups", "Gadgets", "Science"],
 };
 
-export default function ArticleEditor({ article, user, onClose }) {
+export default function ArticleEditor({ article, user, publisherProfile, onClose }) {
   const [formData, setFormData] = useState({
     title: article?.title || "",
     subtitle: article?.subtitle || "",
