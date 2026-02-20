@@ -94,10 +94,14 @@ export default function MyAccount() {
         </div>
 
         <Tabs defaultValue="saved" className="space-y-6">
-          <TabsList className="grid w-full md:w-auto grid-cols-2 bg-[var(--muted)]">
+          <TabsList className="grid w-full md:w-auto grid-cols-3 bg-[var(--muted)]">
             <TabsTrigger value="saved" className="gap-2">
               <Bookmark className="w-4 h-4" />
               Saved Articles
+            </TabsTrigger>
+            <TabsTrigger value="bio" className="gap-2">
+              <PenSquare className="w-4 h-4" />
+              Author Bio
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="w-4 h-4" />
