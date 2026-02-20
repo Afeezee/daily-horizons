@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +12,8 @@ import ArticleEditor from "../components/publisher/ArticleEditor.jsx";
 import PublisherStats from "../components/publisher/PublisherStats.jsx";
 import ArticlesList from "../components/publisher/ArticlesList.jsx";
 import TermsDialog from "../components/publisher/TermsDialog.jsx";
+import NewArticleTermsDialog from "../components/publisher/NewArticleTermsDialog.jsx";
+import BioEditor from "../components/publisher/BioEditor.jsx";
 
 export default function PublisherDashboard() {
   const [user, setUser] = useState(null);
