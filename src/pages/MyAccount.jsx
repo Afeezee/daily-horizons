@@ -138,6 +138,27 @@ export default function MyAccount() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="bio">
+            {publisherProfile ? (
+              <BioEditor
+                profile={publisherProfile}
+                onSaved={() => queryClient.invalidateQueries({ queryKey: ['publisherProfile'] })}
+              />
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <PenSquare className="w-12 h-12 text-[var(--muted-foreground)] mx-auto mb-4" />
+                  <p className="text-[var(--muted-foreground)] mb-4">
+                    Set up your author profile by visiting the Publisher Dashboard first.
+                  </p>
+                  <Link to={createPageUrl("PublisherDashboard")}>
+                    <Button>Go to Publisher Dashboard</Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
           <TabsContent value="settings">
             <div className="space-y-6">
               <Card>
