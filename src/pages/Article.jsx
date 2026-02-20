@@ -67,6 +67,15 @@ export default function Article() {
     enabled: !!articleId,
   });
 
+  const { data: authorProfile } = useQuery({
+    queryKey: ['authorProfile', article?.created_by],
+    queryFn: async () => {
+      const profiles = await base44.entities.PublisherProfile.filter({ created_by: article.created_by });
+      return profiles[0] || null;
+    },
+    enabled: !!article?.created_by,
+  });
+
   const { data: savedArticles } = useQuery({
     queryKey: ['savedArticles', user?.email],
     queryFn: () => base44.entities.SavedArticle.filter({ created_by: user.email }),
