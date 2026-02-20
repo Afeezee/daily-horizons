@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, Bookmark, Settings, LogOut } from "lucide-react";
+import { User, Bookmark, Settings, LogOut, PenSquare } from "lucide-react";
 import ArticleCard from "../components/articles/ArticleCard";
+import BioEditor from "../components/publisher/BioEditor";
 
 export default function MyAccount() {
   const [user, setUser] = useState(null);
