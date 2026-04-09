@@ -21,13 +21,20 @@ import MobileTopBar from "@/components/mobile/MobileTopBar";
 import PageTransition from "@/components/mobile/PageTransition";
 
 const categories = [
-  { name: "News", icon: Newspaper, subcategories: ["Breaking", "Politics", "World", "Business"] },
+  { name: "News", icon: Newspaper, subcategories: ["Breaking", "World"] },
+  { name: "Politics", icon: Newspaper, subcategories: ["Elections", "Governance", "Policy"] },
+  { name: "Business", icon: Newspaper, subcategories: ["Markets", "Companies", "Finance"] },
+  { name: "Economy", icon: Newspaper, subcategories: ["Trade", "Inflation", "Banking"] },
   { name: "Opinion", icon: MessageSquare, subcategories: ["Editorials", "Columns", "Letters"] },
   { name: "Culture", icon: Palette, subcategories: ["Arts", "Books", "Film", "Music"] },
-  { name: "Lifestyle", icon: Heart, subcategories: ["Food", "Travel", "Health", "Fashion"] },
+  { name: "Lifestyle", icon: Heart, subcategories: ["Food", "Travel", "Fashion"] },
+  { name: "Health", icon: Heart, subcategories: ["Wellness", "Medicine", "Fitness"] },
   { name: "Sport", icon: Trophy, subcategories: ["Football", "Athletics", "Analysis"] },
+  { name: "Crime", icon: Newspaper, subcategories: ["Courts", "Investigations", "Security"] },
+  { name: "Entertainment", icon: Palette, subcategories: ["Music", "Film", "Celebrities"] },
   { name: "Education", icon: GraduationCap, subcategories: ["Higher Ed", "K-12", "Research"] },
   { name: "Technology", icon: Cpu, subcategories: ["AI", "Startups", "Gadgets", "Science"] },
+  { name: "World", icon: Newspaper, subcategories: ["Africa", "Americas", "Europe", "Asia"] },
 ];
 
 export default function Layout({ children, currentPageName }) {

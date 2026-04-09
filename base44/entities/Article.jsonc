@@ -1,0 +1,154 @@
+{
+  "name": "Article",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Article headline"
+    },
+    "subtitle": {
+      "type": "string",
+      "description": "Article kicker or subtitle"
+    },
+    "body": {
+      "type": "string",
+      "description": "Full article content in HTML/markdown"
+    },
+    "summary": {
+      "type": "string",
+      "description": "One paragraph summary for digest"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "News",
+        "Opinion",
+        "Culture",
+        "Lifestyle",
+        "Sport",
+        "Education",
+        "Technology",
+        "Business",
+        "Economy",
+        "Politics",
+        "Crime",
+        "Entertainment",
+        "Health",
+        "World"
+      ],
+      "description": "Primary category"
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Subcategories or tags"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Article tags for SEO and discovery"
+    },
+    "lead_image_url": {
+      "type": "string",
+      "description": "Main article image URL"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Author display name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "pending_moderation",
+        "published",
+        "rejected"
+      ],
+      "default": "draft",
+      "description": "Publication status"
+    },
+    "moderation_notes": {
+      "type": "string",
+      "description": "AI moderation feedback"
+    },
+    "published_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the article was published"
+    },
+    "reading_time": {
+      "type": "number",
+      "description": "Estimated reading time in minutes"
+    },
+    "views_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of views"
+    },
+    "likes_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of likes"
+    },
+    "comments_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of comments"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Featured in hero section"
+    },
+    "is_editor_pick": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marked as editor's pick"
+    },
+    "meta_title": {
+      "type": "string",
+      "description": "SEO meta title"
+    },
+    "meta_description": {
+      "type": "string",
+      "description": "SEO meta description"
+    }
+  },
+  "required": [
+    "title",
+    "body",
+    "category"
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

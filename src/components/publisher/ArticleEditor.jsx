@@ -19,16 +19,23 @@ import {
 import FactCheckPanel from "../articles/FactCheckPanel";
 import AuthorBioCard from "./AuthorBioCard";
 
-const categories = ["News", "Opinion", "Culture", "Lifestyle", "Sport", "Education", "Technology"];
+const categories = ["News", "Politics", "Business", "Economy", "Opinion", "Culture", "Lifestyle", "Health", "Sport", "Crime", "Entertainment", "Education", "Technology", "World"];
 
 const subcategories = {
-  News: ["Breaking", "Politics", "World", "Business"],
+  News: ["Breaking", "World"],
+  Politics: ["Elections", "Governance", "Policy"],
+  Business: ["Markets", "Companies", "Finance"],
+  Economy: ["Trade", "Inflation", "Banking"],
   Opinion: ["Editorials", "Columns", "Letters"],
   Culture: ["Arts", "Books", "Film", "Music"],
-  Lifestyle: ["Food", "Travel", "Health", "Fashion"],
+  Lifestyle: ["Food", "Travel", "Fashion"],
+  Health: ["Wellness", "Medicine", "Fitness"],
   Sport: ["Football", "Athletics", "Analysis"],
+  Crime: ["Courts", "Investigations", "Security"],
+  Entertainment: ["Music", "Film", "Celebrities"],
   Education: ["Higher Ed", "K-12", "Research"],
   Technology: ["AI", "Startups", "Gadgets", "Science"],
+  World: ["Africa", "Americas", "Europe", "Asia"],
 };
 
 export default function ArticleEditor({ article, user, publisherProfile, onClose }) {
