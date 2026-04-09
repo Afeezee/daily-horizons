@@ -13,15 +13,28 @@ export default function Category() {
   const { data: articles, isLoading } = useQuery({
     queryKey: ['categoryArticles', categoryName, labelFilter],
     queryFn: async () => {
-      let filtered = await base44.entities.Article.filter(
-        { category: categoryName, status: "published" },
-        "-published_date",
-        50
-      );
+      let filtered;
 
-      // Client-side label filtering if needed
       if (labelFilter) {
-        filtered = filtered.filter(a => a.labels && a.labels.includes(labelFilter));
+        // When filtering by label (e.g. "Breaking"), search across ALL published articles
+        // because labels like "Breaking" can appear on articles in any category
+        const allPublished = await base44.entities.Article.filter(
+          { status: "published" },
+          "-published_date",
+          200
+        );
+        filtered = allPublished.filter(a => {
+          const matchesLabel = a.labels && a.labels.includes(labelFilter);
+          // Also include articles that match the category directly
+          const matchesCategory = a.category === categoryName;
+          return matchesLabel || matchesCategory;
+        });
+      } else {
+        filtered = await base44.entities.Article.filter(
+          { category: categoryName, status: "published" },
+          "-published_date",
+          50
+        );
       }
 
       return filtered;

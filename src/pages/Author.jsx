@@ -13,15 +13,22 @@ export default function Author() {
   const authorName = urlParams.get("name");
 
   const { data: articles, isLoading } = useQuery({
-    queryKey: ['authorArticles', authorEmail],
+    queryKey: ['authorArticles', authorEmail, authorName],
     queryFn: async () => {
-      return await base44.entities.Article.filter(
-        { created_by: authorEmail, status: "published" },
+      // Agent articles all have created_by "anonymous", so we filter by author_name instead
+      const allPublished = await base44.entities.Article.filter(
+        { status: "published" },
         "-published_date",
-        100
+        200
       );
+      return allPublished.filter(a => {
+        // Match by created_by email OR by author_name
+        if (authorEmail && authorEmail !== "anonymous" && a.created_by === authorEmail) return true;
+        if (authorName && a.author_name === authorName) return true;
+        return false;
+      });
     },
-    enabled: !!authorEmail,
+    enabled: !!(authorEmail || authorName),
     initialData: [],
   });
 
