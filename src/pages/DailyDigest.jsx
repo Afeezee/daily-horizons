@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -9,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Clock, FileText, Mail, CheckCircle, Rss, Settings, Newspaper, Send, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Clock, FileText, Mail, CheckCircle, Rss, Settings, Newspaper, Send, Loader2, ChevronDown, ChevronUp, CalendarDays, X } from "lucide-react";
+import { startOfDay, endOfDay, subDays, isWithinInterval, parseISO } from "date-fns";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format } from "date-fns";
@@ -34,6 +34,9 @@ export default function DailyDigest() {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [showSubcategories, setShowSubcategories] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [datePreset, setDatePreset] = useState("all");
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -82,7 +85,7 @@ export default function DailyDigest() {
   }, [preferences]);
 
   const { data: digestArticles, isLoading: articlesLoading } = useQuery({
-    queryKey: ['digestArticles', selectedCategories, selectedSubcategories, numArticlesToShow],
+    queryKey: ['digestArticles', selectedCategories, selectedSubcategories, numArticlesToShow, dateFrom, dateTo],
     queryFn: async () => {
       let allArticles = await base44.entities.Article.filter(
         { status: "published" },
@@ -102,8 +105,25 @@ export default function DailyDigest() {
         );
       }
 
+      // Filter by date range
+      if (dateFrom || dateTo) {
+        allArticles = allArticles.filter(a => {
+          const articleDate = new Date(a.published_date || a.created_date);
+          if (dateFrom && dateTo) {
+            return isWithinInterval(articleDate, {
+              start: startOfDay(new Date(dateFrom)),
+              end: endOfDay(new Date(dateTo)),
+            });
+          } else if (dateFrom) {
+            return articleDate >= startOfDay(new Date(dateFrom));
+          } else if (dateTo) {
+            return articleDate <= endOfDay(new Date(dateTo));
+          }
+          return true;
+        });
+      }
+
       // Create a balanced mix of articles from different categories
-      // Group articles by category
       const articlesByCategory = {};
       allArticles.forEach(article => {
         if (!articlesByCategory[article.category]) {
@@ -112,7 +132,6 @@ export default function DailyDigest() {
         articlesByCategory[article.category].push(article);
       });
 
-      // Sort articles within each category by priority
       Object.keys(articlesByCategory).forEach(category => {
         articlesByCategory[category].sort((a, b) => {
           const scoreA = (a.is_editor_pick ? 40 : 0) + (a.is_featured ? 30 : 0) + (a.views_count || 0) * 0.01;
@@ -121,7 +140,6 @@ export default function DailyDigest() {
         });
       });
 
-      // Interleave articles from different categories for a balanced mix
       const balancedArticles = [];
       const categoryKeys = Object.keys(articlesByCategory);
       let maxLength = 0;
@@ -246,6 +264,36 @@ export default function DailyDigest() {
     }
   };
 
+  const handleDatePreset = (preset) => {
+    setDatePreset(preset);
+    const today = new Date();
+    switch (preset) {
+      case "today":
+        setDateFrom(format(today, "yyyy-MM-dd"));
+        setDateTo(format(today, "yyyy-MM-dd"));
+        break;
+      case "week":
+        setDateFrom(format(subDays(today, 7), "yyyy-MM-dd"));
+        setDateTo(format(today, "yyyy-MM-dd"));
+        break;
+      case "month":
+        setDateFrom(format(subDays(today, 30), "yyyy-MM-dd"));
+        setDateTo(format(today, "yyyy-MM-dd"));
+        break;
+      case "all":
+      default:
+        setDateFrom("");
+        setDateTo("");
+        break;
+    }
+  };
+
+  const clearDateFilter = () => {
+    setDateFrom("");
+    setDateTo("");
+    setDatePreset("all");
+  };
+
   // Get available subcategories based on selected categories
   const availableSubcategories = selectedCategories.length > 0
     ? selectedCategories.flatMap(cat => subcategories[cat] || [])
@@ -339,6 +387,72 @@ export default function DailyDigest() {
                           Showing all categories
                         </p>
                       )}
+                    </div>
+
+                    {/* Date Filter */}
+                    <div className="pt-2 border-t border-[var(--border)]">
+                      <Label className="mb-2 block font-semibold flex items-center gap-2">
+                        <CalendarDays className="w-4 h-4" />
+                        Filter by Date
+                      </Label>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {[
+                          { value: "all", label: "All Time" },
+                          { value: "today", label: "Today" },
+                          { value: "week", label: "Past 7 Days" },
+                          { value: "month", label: "Past 30 Days" },
+                        ].map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => handleDatePreset(opt.value)}
+                            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                              datePreset === opt.value
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-[var(--muted-foreground)] whitespace-nowrap">From</Label>
+                          <Input
+                            type="date"
+                            value={dateFrom}
+                            onChange={(e) => {
+                              setDateFrom(e.target.value);
+                              setDatePreset("custom");
+                            }}
+                            className="w-40 h-8 text-sm"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-[var(--muted-foreground)] whitespace-nowrap">To</Label>
+                          <Input
+                            type="date"
+                            value={dateTo}
+                            onChange={(e) => {
+                              setDateTo(e.target.value);
+                              setDatePreset("custom");
+                            }}
+                            className="w-40 h-8 text-sm"
+                          />
+                        </div>
+                        {(dateFrom || dateTo) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearDateFilter}
+                            className="gap-1 h-8 text-xs text-[var(--muted-foreground)]"
+                          >
+                            <X className="w-3 h-3" />
+                            Clear
+                          </Button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Subcategories Toggle */}
