@@ -1,0 +1,41 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "display_name": {
+      "type": "string",
+      "description": "Public display name"
+    },
+    "bio": {
+      "type": "string",
+      "description": "User biography"
+    },
+    "preferences": {
+      "type": "object",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "enum": [
+            "light",
+            "dark"
+          ],
+          "default": "light"
+        },
+        "breaking_news_alerts": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "daily_post_limit_exempt": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, user is exempt from the 5-posts-per-day limit (set by admin)"
+    }
+  },
+  "required": [
+    "display_name",
+    "bio",
+    "preferences"
+  ]
+}

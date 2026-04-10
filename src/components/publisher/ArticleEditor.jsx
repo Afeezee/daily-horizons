@@ -38,6 +38,34 @@ const subcategories = {
   World: ["Africa", "Americas", "Europe", "Asia"],
 };
 
+const DAILY_POST_LIMIT = 5;
+
+async function checkDailyPostLimit(user) {
+  // Admins and exempt users skip the limit
+  if (user.role === "admin" || user.daily_post_limit_exempt) {
+    return { allowed: true, remaining: Infinity };
+  }
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const allUserArticles = await base44.entities.Article.filter(
+    { created_by: user.email },
+    "-created_date",
+    100
+  );
+
+  const todayCount = allUserArticles.filter(
+    (a) => new Date(a.created_date) >= todayStart
+  ).length;
+
+  return {
+    allowed: todayCount < DAILY_POST_LIMIT,
+    remaining: Math.max(0, DAILY_POST_LIMIT - todayCount),
+    count: todayCount,
+  };
+}
+
 export default function ArticleEditor({ article, user, publisherProfile, onClose }) {
   const [formData, setFormData] = useState({
     title: article?.title || "",
@@ -212,6 +240,16 @@ Return ONLY the rewritten HTML content with mandatory blank lines after each par
   const handleSaveDraft = async () => {
     setIsSaving(true);
     try {
+      // Check daily limit only for new articles (not edits)
+      if (!article) {
+        const limitCheck = await checkDailyPostLimit(user);
+        if (!limitCheck.allowed) {
+          alert(`You've reached your daily limit of ${DAILY_POST_LIMIT} posts. You have ${limitCheck.remaining} posts remaining today. Please try again tomorrow.`);
+          setIsSaving(false);
+          return;
+        }
+      }
+
       const articleData = {
         ...formData,
         tags: formData.tags.split(",").map(t => t.trim()).filter(Boolean),
@@ -240,6 +278,16 @@ Return ONLY the rewritten HTML content with mandatory blank lines after each par
 
     setIsPublishing(true);
     try {
+      // Check daily limit only for new articles (not edits)
+      if (!article) {
+        const limitCheck = await checkDailyPostLimit(user);
+        if (!limitCheck.allowed) {
+          alert(`You've reached your daily limit of ${DAILY_POST_LIMIT} posts. You have ${limitCheck.remaining} posts remaining today. Please try again tomorrow.`);
+          setIsPublishing(false);
+          return;
+        }
+      }
+
       const articleData = {
         ...formData,
         tags: formData.tags.split(",").map(t => t.trim()).filter(Boolean),
