@@ -330,7 +330,7 @@ export default function Article() {
 
         {/* Article Body */}
         <div
-          className="prose prose-lg max-w-none mb-12"
+          className="prose prose-lg max-w-none mb-12 article-body-content"
           dangerouslySetInnerHTML={{ __html: article.body }}
           style={{
             color: 'var(--foreground)',

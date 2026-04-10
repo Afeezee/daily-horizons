@@ -156,3 +156,12 @@ button:focus-visible {
     @apply bg-background text-foreground;
   }
 }
+
+/* Article body paragraph spacing for readability */
+.article-body-content p {
+  margin-bottom: 1.5em;
+}
+
+.article-body-content p:last-child {
+  margin-bottom: 0;
+}
